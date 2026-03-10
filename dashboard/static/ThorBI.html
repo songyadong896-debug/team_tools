@@ -1,0 +1,4670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>理想汽车 - 充电网络运营管理看板</title>
+    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        /* CSS样式保持不变 */
+        :root {
+            --primary-color: rgb(0, 45, 40);
+            --primary-light: rgba(0, 45, 40, 0.9);
+            --primary-lighter: rgba(0, 45, 40, 0.1);
+            --secondary-color: rgb(206, 164, 114);
+            --secondary-light: rgba(206, 164, 114, 0.1);
+            --bg-color: #ffffff;
+            --bg-gray: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: #e8e8e8;
+            --border-light: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --text-light: #8c8c8c;
+            --success-color: #52c41a;
+            --warning-color: #faad14;
+            --error-color: #ff4d4f;
+            --shadow-sm: 0 2px 8px rgba(0, 45, 40, 0.06);
+            --shadow-md: 0 4px 16px rgba(0, 45, 40, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 45, 40, 0.12);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-gray);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* 导航栏样式 */
+        .nav-container {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            padding: 0 24px;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            height: 64px;
+        }
+
+        .nav-logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            margin-right: 56px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo::before {
+            content: '';
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            align-items: center;
+        }
+
+        .nav-tab {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 8px 20px;
+            border-radius: 20px;
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .nav-tab.active {
+            background-color: white;
+            color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 主内容区域 */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 页面头部 */
+        .page-header {
+            margin-bottom: 32px;
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            position: relative;
+            padding-left: 16px;
+        }
+
+        .page-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: var(--secondary-color);
+            border-radius: 2px;
+        }
+
+        .page-info {
+            display: flex;
+            gap: 32px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            align-items: center;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-bar {
+            display: inline-block;
+            width: 160px;
+            height: 6px;
+            background-color: var(--border-light);
+            border-radius: 3px;
+            margin-left: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 指标页签样式 */
+        .metric-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: white;
+            padding: 4px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .metric-tab {
+            flex: 1;
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .metric-tab:hover {
+            background: var(--bg-gray);
+            color: var(--text-primary);
+        }
+
+        .metric-tab.active {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .metric-content {
+            display: none;
+        }
+
+        .metric-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            padding: 28px 32px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            position: relative;
+            transition: var(--transition);
+            border: 1px solid var(--border-light);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 详细数据按钮 */
+        .detail-button {
+            position: absolute;
+            top: 28px;
+            right: 32px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .detail-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .layer-logic-container {
+            background: var(--bg-gray);
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .layer-logic-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .layer-logic-title::before {
+            content: '📊';
+            font-size: 16px;
+        }
+
+        .layer-logic-list {
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        .layer-logic-item {
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .layer-logic-item::before {
+            content: '•';
+            position: absolute;
+            left: 8px;
+            color: var(--secondary-color);
+        }
+
+        .layer-logic-item strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* KPI网格 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, white 0%, var(--bg-gray) 100%);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            position: relative;
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .kpi-card:hover::before {
+            opacity: 1;
+        }
+
+        .kpi-card-full {
+            background: linear-gradient(135deg, var(--primary-lighter) 0%, white 100%);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            grid-column: 1 / -1;
+            position: relative;
+            border: 1px solid var(--border-light);
+        }
+
+        .kpi-card:hover,
+        .kpi-card-full:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--secondary-color);
+        }
+
+        .kpi-header {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 站桩数拆分展示样式 */
+        .kpi-split-values {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 12px;
+        }
+
+        .kpi-split-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-gray);
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .kpi-split-item:hover {
+            background: var(--secondary-light);
+        }
+
+        .kpi-split-label {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .kpi-split-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 趋势按钮样式 */
+        .trend-button {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            opacity: 0.9;
+        }
+
+        .trend-button:hover {
+            opacity: 1;
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+
+        .kpi-target {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .kpi-target::before {
+            content: '🎯';
+            font-size: 16px;
+        }
+
+        .kpi-progress {
+            font-size: 16px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 16px;
+            display: inline-block;
+            transition: var(--transition);
+        }
+
+        .kpi-progress.success {
+            color: var(--success-color);
+            background: rgba(82, 196, 26, 0.1);
+        }
+
+        .kpi-progress.warning {
+            color: var(--warning-color);
+            background: rgba(250, 173, 20, 0.1);
+        }
+
+        .kpi-progress.danger {
+            color: var(--error-color);
+            background: rgba(255, 77, 79, 0.1);
+        }
+
+        .kpi-detail {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .kpi-detail-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .kpi-detail-item:hover {
+            background: var(--bg-gray);
+            color: var(--text-primary);
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 20px;
+            padding: 32px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: var(--bg-gray);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .data-table tr {
+            transition: var(--transition);
+        }
+
+        .data-table tr:hover {
+            background-color: var(--bg-gray);
+        }
+
+        .data-table tr:hover td {
+            color: var(--text-primary);
+        }
+
+        .data-table .number {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* 返回按钮样式 */
+        .back-button {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .sparkline {
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* 筛选按钮样式 */
+        .filter-container {
+            margin: 16px 0;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-btn.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 省份年度合计表格样式 */
+        .province-yearly-wrapper {
+            position: relative;
+            max-height: 500px;
+            overflow: auto;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+        }
+
+        .province-yearly-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+        }
+
+        .province-yearly-table thead th {
+            background: linear-gradient(135deg, #002D28 0%, rgba(0, 45, 40, 0.9) 100%);
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #CEA472;
+        }
+
+        /* 省份上周表现表格样式（两行表头） */
+        .province-weekly-wrapper {
+            position: relative;
+            max-height: 500px;
+            overflow: auto;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+        }
+
+        .province-weekly-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+        }
+
+        .province-weekly-table thead tr:first-child th {
+            background: linear-gradient(135deg, #002D28 0%, rgba(0, 45, 40, 0.9) 100%);
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .province-weekly-table thead tr:nth-child(2) th {
+            background: linear-gradient(135deg, #002D28 0%, rgba(0, 45, 40, 0.9) 100%);
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 44px;
+            /* 第一行高度 */
+            z-index: 10;
+            border-bottom: 2px solid #CEA472;
+        }
+
+        /* 趋势表格样式 */
+        .trend-wrapper {
+            position: relative;
+            max-height: 500px;
+            overflow: auto;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+        }
+
+        .trend-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+        }
+
+        .trend-table thead th {
+            background: linear-gradient(135deg, #002D28 0%, rgba(0, 45, 40, 0.9) 100%);
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #CEA472;
+        }
+
+        /* 通用表格样式 */
+        .province-yearly-table tbody tr,
+        .province-weekly-table tbody tr,
+        .trend-table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .province-yearly-table tbody tr:hover,
+        .province-weekly-table tbody tr:hover,
+        .trend-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .province-yearly-table td,
+        .province-weekly-table td,
+        .trend-table td {
+            padding: 10px 8px;
+            font-size: 13px;
+        }
+
+        /* 城市表格使用相同样式 */
+        .city-yearly-wrapper,
+        .city-weekly-wrapper {
+            position: relative;
+            max-height: 500px;
+            overflow: auto;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+        }
+
+        .city-yearly-table,
+        .city-weekly-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+        }
+
+        /* 复用省份表格的样式 */
+        .city-yearly-table thead th {
+            background: linear-gradient(135deg, #002D28 0%, rgba(0, 45, 40, 0.9) 100%);
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #CEA472;
+        }
+
+        .city-weekly-table thead tr:first-child th {
+            background: linear-gradient(135deg, #002D28 0%, rgba(0, 45, 40, 0.9) 100%);
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .city-weekly-table thead tr:nth-child(2) th {
+            background: linear-gradient(135deg, #002D28 0%, rgba(0, 45, 40, 0.9) 100%);
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 44px;
+            z-index: 10;
+            border-bottom: 2px solid #CEA472;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">理想汽车充电网络运营管理看板</div>
+            <div class="nav-tabs">
+                <a href="#" class="nav-tab active" data-page="overview">核心KPI总览</a>
+                <a href="#" class="nav-tab" data-page="user-analysis">用户分层分析</a>
+                <a href="#" class="nav-tab" data-page="city-region">城市区域KPI</a>
+                <a href="#" class="nav-tab" data-page="province">省份指标明细</a>
+                <a href="#" class="nav-tab" data-page="city-detail">城市指标明细</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <!-- 核心KPI总览页面 -->
+        <section class="page-section active" id="overview">
+            <div class="page-header">
+                <h1 class="page-title">全国总体核心KPI</h1>
+                <div class="page-info">
+                    <div class="info-item">
+                        <span>数据刷新日期：<span id="dataDate">--</span></span>
+                    </div>
+                    <div class="info-item">
+                        <span>H1时间进度：<span id="timeProgress">--</span>%</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 核心KPI指标页签 -->
+            <div class="metric-tabs">
+                <button class="metric-tab active" data-metric="stations">充电网络站桩数</button>
+                <button class="metric-tab" data-metric="revenue">充电网络收入</button>
+                <button class="metric-tab" data-metric="charge">总充电量</button>
+                <button class="metric-tab" data-metric="daily-revenue">单枪日服务费收入</button>
+                <button class="metric-tab" data-metric="daily-power">单枪日电量</button>
+                <button class="metric-tab" data-metric="penetration">理想车主公充电量渗透率</button>
+            </div>
+
+            <!-- 指标内容容器 -->
+            <div id="metric-contents"></div>
+        </section>
+
+        <!-- 用户分层分析页面 -->
+        <section class="page-section" id="user-analysis">
+            <div class="page-header">
+                <h1 class="page-title">全国用户分层核心指标</h1>
+                <span>基于数据报告日（<span id="userLayerDataDate"
+                        style="color: var(--primary-color); font-weight: 600;">--</span>）的近30天数据滚动刷新</span>
+                <div class="page-info">
+                    <div class="layer-logic-container">
+                        <div class="layer-logic-title">用户分层逻辑说明</div>
+                        <div class="layer-logic-list">
+                            <div class="layer-logic-item"><strong>活跃用户</strong>：最近一次理想超充使用 ≤ 30天</div>
+                            <div class="layer-logic-item"><strong>潜在流失用户</strong>：最近一次理想超充使用 > 30天 且 ≤ 60天</div>
+                            <div class="layer-logic-item"><strong>流失用户</strong>：最近一次理想超充使用 > 60天</div>
+                            <div class="layer-logic-item"><strong>从未使用用户</strong>：提车 > 30天 且从未使用过理想超充</div>
+                            <div class="layer-logic-item"><strong>新车主首充率</strong>：30天内交付新车主数且使用理想超充 / 30天内交付新车主数</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户分层页签 -->
+            <div class="metric-tabs">
+                <button class="metric-tab active" data-layer="all">全量车主</button>
+                <button class="metric-tab" data-layer="phev">增程车型</button>
+                <button class="metric-tab" data-layer="bev">纯电车型</button>
+            </div>
+
+            <!-- 分层内容容器 -->
+            <div id="layer-contents"></div>
+        </section>
+
+        <!-- 城市区域KPI页面 -->
+        <section class="page-section" id="city-region">
+            <div class="page-header">
+                <h1 class="page-title">六大城市区域核心KPI</h1>
+                <div class="page-info">
+                    <div class="info-item">
+                        <span>所有城市站</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 区域KPI页签 -->
+            <div class="metric-tabs">
+                <button class="metric-tab active" data-region="revenue">充电网络收入</button>
+                <button class="metric-tab" data-region="daily-revenue">单枪日收入</button>
+                <button class="metric-tab" data-region="daily-power">单枪日电量</button>
+                <button class="metric-tab" data-region="detail-report">不同上线时间段场站数据</button>
+            </div>
+
+            <!-- 区域内容容器 -->
+            <div id="region-contents"></div>
+        </section>
+
+        <!-- 省份指标明细页面 -->
+        <section class="page-section" id="province">
+            <div class="page-header">
+                <h1 class="page-title">全国分省份核心指标明细</h1>
+                <div class="page-info">
+                    <div class="info-item">
+                        <span>年度合计 & 上周表现</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 省份内容容器 -->
+            <div id="province-contents"></div>
+        </section>
+
+        <!-- 城市指标明细页面 -->
+        <section class="page-section" id="city-detail">
+            <div class="page-header">
+                <h1 class="page-title">TOP20城市核心指标明细</h1>
+                <div class="page-info">
+                    <div class="info-item">
+                        <span>年度合计 & 上周表现</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 城市内容容器 -->
+            <div id="city-detail-contents"></div>
+        </section>
+    </div>
+
+    <!-- 趋势弹窗 -->
+    <div class="modal-overlay" id="trendModal" onclick="closeTrendModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title" id="trendModalTitle">近6个月趋势</h3>
+                <button class="modal-close" onclick="closeTrendModal()">&times;</button>
+            </div>
+            <div id="trendChart" style="width: 100%; height: 400px;"></div>
+        </div>
+    </div>
+
+    <!-- 详细数据页面 -->
+    <div id="detailPageContainer" style="display: none;">
+        <div class="detail-page" style="padding: 32px;">
+            <button class="back-button" onclick="backToOverview()">返回总览</button>
+            <h1 class="page-title" id="detailPageTitle">充电网络收入</h1>
+            <div class="card">
+                <table class="data-table" id="detailDataTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: right; min-width: 150px;">维度</th>
+                            <th style="text-align: right;">全国整体</th>
+                            <th style="text-align: right;">城市整体</th>
+                            <th style="text-align: right;">城市自营</th>
+                            <th style="text-align: right;">城市加盟</th>
+                            <th style="text-align: right;">城市门店</th>
+                            <th style="text-align: right;">高速整体</th>
+                            <th style="text-align: right;">高速线上</th>
+                            <th style="text-align: right;">高速线下</th>
+                            <th style="text-align: right;">旅游线路</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailDataBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数据存储管理器 - 使用IndexedDB替代localStorage
+        class DataStorageManager {
+            constructor() {
+                this.dbName = 'DashboardDB';
+                this.storeName = 'dashboardData';
+                this.version = 1;
+                this.db = null;
+            }
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve();
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName);
+                        }
+                    };
+                });
+            }
+
+            async setData(key, data) {
+                if (!this.db) await this.init();
+
+                const transaction = this.db.transaction([this.storeName], 'readwrite');
+                const store = transaction.objectStore(this.storeName);
+
+                return new Promise((resolve, reject) => {
+                    const request = store.put(data, key);  // 直接存储数据，不压缩
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async getData(key) {
+                if (!this.db) await this.init();
+
+                const transaction = this.db.transaction([this.storeName], 'readonly');
+                const store = transaction.objectStore(this.storeName);
+
+                return new Promise((resolve, reject) => {
+                    const request = store.get(key);
+                    request.onsuccess = () => {
+                        resolve(request.result);  // 直接返回数据，不解压
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            // 数据压缩（简单实现，可以根据需要使用更复杂的压缩算法）
+            compressData(data) {
+                // 移除不必要的空白和格式
+                const jsonStr = JSON.stringify(data);
+                return jsonStr;
+            }
+
+            decompressData(compressedData) {
+                return JSON.parse(compressedData);
+            }
+
+            // 缓存关键信息到localStorage（用于快速访问）
+            async cacheEssentialData(fullData) {
+                const essentialData = {
+                    version: fullData.version_info,
+                    lastUpdate: fullData['最后更新时间'],
+                    dataDate: fullData['数据日期'],
+                    latestMonth: fullData['最新月份'],
+                    // 只保存核心KPI的汇总数据
+                    coreKPISummary: {
+                        站数: fullData['核心KPI']?.['充电网络站桩数']?.['全国整体']?.stations,
+                        桩数: fullData['核心KPI']?.['充电网络站桩数']?.['全国整体']?.piles,
+                        收入: fullData['核心KPI']?.['充电网络收入']?.['全国整体'],
+                        电量: fullData['核心KPI']?.['总充电量']?.['全国整体']
+                    }
+                };
+
+                try {
+                    localStorage.setItem('dashboardEssentials', JSON.stringify(essentialData));
+                } catch (e) {
+                    console.warn('缓存基础数据失败:', e);
+                }
+            }
+        }
+
+        // 创建全局存储管理器实例
+        const storageManager = new DataStorageManager();
+        // 全局数据存储
+        let dashboardData = {};
+        let trendChart = null;
+
+        const YEAR_START_VALUES = {
+            '全国整体': 1777,      // 请替换为实际的年初已有值
+            '城市整体': 1031,      // 请替换为实际的年初已有值
+            '高速整体': 746,       // 请替换为实际的年初已有值
+            '旅游线路': 0        // 请替换为实际的年初已有值
+        };
+        // 页面管理器
+        const PageManager = {
+            init() {
+                this.bindEvents();
+                this.loadData();
+            },
+
+            bindEvents() {
+                // 导航页签切换
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.switchPage(tab.getAttribute('data-page'));
+                    });
+                });
+
+                // 通用页签切换处理
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('metric-tab')) {
+                        this.handleTabClick(e.target);
+                    }
+                });
+
+                // ESC键关闭弹窗
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        closeTrendModal();
+                    }
+                });
+            },
+
+            switchPage(pageId) {
+                document.querySelectorAll('.page-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(pageId).classList.add('active');
+
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                    if (tab.getAttribute('data-page') === pageId) {
+                        tab.classList.add('active');
+                    }
+                });
+            },
+
+            handleTabClick(tab) {
+                const siblings = tab.parentElement.querySelectorAll('.metric-tab');
+                siblings.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // 根据不同页面处理
+                const pageSection = tab.closest('.page-section');
+                if (pageSection.id === 'overview') {
+                    RenderManager.renderMetricContent(tab.getAttribute('data-metric'));
+                } else if (pageSection.id === 'user-analysis') {
+                    RenderManager.renderUserLayer(tab.getAttribute('data-layer'));
+                } else if (pageSection.id === 'city-region') {
+                    RenderManager.renderRegionContent(tab.getAttribute('data-region'));
+                } else if (pageSection.id === 'province') {
+                    RenderManager.handleProvinceTabs(tab);
+                } else if (pageSection.id === 'city-detail') {
+                    RenderManager.handleCityTabs(tab);
+                }
+            },
+
+            async loadData() {
+                try {
+                    // 先从服务器获取数据
+                    const response = await fetch('/api/dashboard-data');
+                    const result = await response.json();
+
+                    console.log('=== 完整响应数据 ===');
+                    console.log(result);
+
+                    if (result.data) {
+                        dashboardData = result.data;
+
+                        // 存储到IndexedDB
+                        try {
+                            await storageManager.setData('dashboardData', dashboardData);
+                            await storageManager.setData('cacheTime', new Date().getTime());
+                            // 缓存关键信息到localStorage
+                            await storageManager.cacheEssentialData(dashboardData);
+                            console.log('数据缓存成功');
+                        } catch (error) {
+                            console.error('缓存数据失败:', error);
+                            // 即使缓存失败，也继续渲染
+                        }
+
+                        RenderManager.processTargetData();
+                        RenderManager.renderAll();
+                    }
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+
+                    // 只有在网络请求失败时才使用缓存数据
+                    try {
+                        const cachedData = await storageManager.getData('dashboardData');
+                        if (cachedData) {
+                            console.log('网络请求失败，使用备用缓存数据');
+                            dashboardData = cachedData;
+                            RenderManager.processTargetData();
+                            RenderManager.renderAll();
+                        }
+                    } catch (cacheError) {
+                        console.error('读取缓存也失败:', cacheError);
+                    }
+                }
+            }
+        }
+
+        // 渲染管理器
+        const RenderManager = {
+            // ✅ 添加处理目标数据的方法
+            processTargetData() {
+                const targetData = dashboardData['目标'];
+                console.log('处理目标数据，原始数据:', targetData);
+
+                if (!targetData) {
+                    console.log('目标数据不存在');
+                    return {};
+                }
+
+                // 如果已经是对象格式，直接使用
+                if (typeof targetData === 'object' && !Array.isArray(targetData)) {
+                    console.log('目标数据已经是对象格式，直接使用');
+                    dashboardData['目标处理后'] = targetData;
+                    return targetData;
+                }
+
+                // 如果是数组格式，进行转换
+                if (Array.isArray(targetData)) {
+                    const result = {};
+
+                    console.log('开始处理数组格式的目标数据，总行数:', targetData.length);
+
+                    // 跳过表头，从第1行开始
+                    for (let i = 1; i < targetData.length; i++) {
+                        const row = targetData[i];
+                        if (row && row.length >= 4) {
+                            const timePeriod = String(row[0]).trim();
+                            const metric = row[1];
+                            const dimension = row[2];
+                            const value = row[3];
+
+                            console.log(`行${i}: 时间=${timePeriod}, 指标=${metric}, 维度=${dimension}, 值=${value}`);
+
+                            // 只处理目标数据，忽略年初已有值
+                            if (timePeriod === '年初已有') {
+                                continue; // 跳过年初已有值的行
+                            }
+
+                            // 映射指标名称
+                            let mappedMetric = metric;
+                            if (metric === '站数') {
+                                mappedMetric = '充电网络站桩数';
+                            }
+
+                            // 存储目标值
+                            if (!result[mappedMetric]) {
+                                result[mappedMetric] = {};
+                            }
+                            result[mappedMetric][dimension] = value;
+                        }
+                    }
+
+                    console.log('处理后的目标数据:', result);
+                    dashboardData['目标处理后'] = result;
+
+                    return result;
+                }
+
+                // 其他情况返回空对象
+                console.log('目标数据格式未知');
+                return {};
+            },
+
+            renderAll() {
+                this.updateHeader();
+
+                // ✅ 保存处理后的单枪日数据供详细页面使用
+                // 后端已经在 _process_daily_metrics_table 中处理好了这些数据
+                if (dashboardData['核心KPI']) {
+                    // 构造 daily_metrics_data 对象
+                    this.daily_metrics_data = {
+                        duration_metrics: {}
+                    };
+
+                    // 从按时长统计中提取单枪日数据
+                    const durationData = dashboardData['按时长统计'];
+                    if (durationData) {
+                        Object.keys(durationData).forEach(duration => {
+                            if (duration !== '全部场站') {  // 排除"全部场站"
+                                this.daily_metrics_data.duration_metrics[duration] = {};
+                                Object.keys(durationData[duration]).forEach(dimension => {
+                                    const stats = durationData[duration][dimension];
+                                    this.daily_metrics_data.duration_metrics[duration][dimension] = {
+                                        revenue: stats.daily_revenue || 0,
+                                        power: stats.daily_power || 0
+                                    };
+                                });
+                            }
+                        });
+                    }
+                }
+
+                this.renderMetricContent('stations');
+                this.renderUserLayer('all');
+                this.renderRegionContent('revenue');
+                this.renderProvince();
+                this.renderCity();
+            },
+
+            updateHeader() {
+                // 显示最后更新时间
+                const lastUpdateTime = dashboardData['最后更新时间'];
+                if (lastUpdateTime) {
+                    // 格式化时间显示
+                    const date = new Date(lastUpdateTime);
+                    const formattedTime = date.toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    document.getElementById('dataDate').textContent = formattedTime;
+
+                    const userLayerDateElement = document.getElementById('userLayerDataDate');
+                    if (userLayerDateElement) {
+                        userLayerDateElement.textContent = formattedTime;
+                    }
+                } else {
+                    document.getElementById('dataDate').textContent = '--';
+                    // 同时更新用户分层页面的日期显示
+                    const userLayerDateElement = document.getElementById('userLayerDataDate');
+                    if (userLayerDateElement) {
+                        userLayerDateElement.textContent = '--';
+                    }
+                }
+
+                // 自动判断H1/H2
+                const dataDate = dashboardData['数据日期'] || new Date().toISOString().split('T')[0];
+                const dateParts = dataDate.split('-');
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]);
+                const day = parseInt(dateParts[2]);
+
+                const currentDate = new Date(year, month - 1, day); // month-1 因为JS的月份是0-11
+                const periodName = month <= 6 ? `${year}年H1` : `${year}年全年`;
+
+                // 精确计算时间进度（到天）
+                let timeProgress = 0;
+                if (month <= 6) {
+                    // H1: 1月1日 到 6月30日
+                    const h1Start = new Date(year, 0, 1); // 1月1日
+                    const h1End = new Date(year, 5, 30); // 6月30日
+                    const totalDays = Math.floor((h1End - h1Start) / (1000 * 60 * 60 * 24)) + 1; // +1包含最后一天
+                    const elapsedDays = Math.floor((currentDate - h1Start) / (1000 * 60 * 60 * 24)) + 1;
+                    timeProgress = Math.round((elapsedDays / totalDays) * 100);
+                } else {
+                    // H2: 7月1日 到 12月31日
+                    const h2Start = new Date(year, 0, 1); // 7月1日
+                    const h2End = new Date(year, 11, 31); // 12月31日
+                    const totalDays = Math.floor((h2End - h2Start) / (1000 * 60 * 60 * 24)) + 1;
+                    const elapsedDays = Math.floor((currentDate - h2Start) / (1000 * 60 * 60 * 24)) + 1;
+                    timeProgress = Math.round((elapsedDays / totalDays) * 100);
+                }
+
+                // 确保进度在0-100之间
+                timeProgress = Math.max(0, Math.min(100, timeProgress));
+
+                // 修改进度显示文本
+                const progressLabel = document.querySelector('.page-info .info-item:nth-child(2) span');
+                if (progressLabel) {
+                    progressLabel.innerHTML = `${periodName}时间进度：<span id="timeProgress">${timeProgress}</span>%`;
+                }
+
+                document.getElementById('progressBar').style.width = timeProgress + '%';
+
+                // 保存周期名称供其他地方使用
+                this.currentPeriodName = periodName;
+                this.currentPeriod = month <= 6 ? 'H1' : '全年';
+            },
+            getPeriodName() {
+                const dataDate = dashboardData['数据日期'] || new Date().toISOString().split('T')[0];
+                const year = parseInt(dataDate.split('-')[0]);
+                const month = parseInt(dataDate.split('-')[1]);
+                return month <= 6 ? `${year}年H1` : `${year}年全年`;
+            },
+            getCurrentPeriod() {
+                const dataDate = dashboardData['数据日期'] || new Date().toISOString().split('T')[0];
+                const month = parseInt(dataDate.split('-')[1]);
+                return month <= 6 ? 'H1' : '全年';
+            },
+            renderMetricContent(metric) {
+                const container = document.getElementById('metric-contents');
+                const kpiData = dashboardData['核心KPI'];
+
+                if (!kpiData) return;
+
+                let html = '';
+
+                switch (metric) {
+                    case 'stations':
+                        html = this.renderStations(kpiData['充电网络站桩数']);
+                        break;
+                    case 'revenue':
+                        html = this.renderRevenue(kpiData['充电网络收入']);
+                        break;
+                    case 'charge':
+                        html = this.renderCharge(kpiData['总充电量']);
+                        break;
+                    case 'daily-revenue':
+                        html = this.renderDailyRevenue(kpiData['单枪日服务费收入']);
+                        break;
+                    case 'daily-power':
+                        html = this.renderDailyPower(kpiData['单枪日电量']);
+                        break;
+                    case 'penetration':
+                        html = this.renderPenetration(kpiData['理想车主公充电量渗透率']);
+                        break;
+                }
+
+                container.innerHTML = `<div class="metric-content active">${html}</div>`;
+            },
+
+            renderStations(data) {
+                if (!data) return '';
+
+                const createStationCard = (title, category, isFull = false) => {
+                    const stationData = data[category];
+                    if (!stationData) return '';
+
+                    const targetData = this.getTarget('充电网络站桩数', category);
+                    const timeProgress = this.getTimeProgress();
+
+                    const progress = this.calculateProgress(
+                        stationData.stations,
+                        targetData,
+                        timeProgress,
+                        '充电网络站桩数',  // 传递指标名称
+                        category           // 传递类别
+                    );
+
+                    const timeProgressColor = this.getTimeProgressColor(progress.value, timeProgress);
+
+                    return `
+                        <div class="${isFull ? 'kpi-card-full' : 'kpi-card'}">
+                            <button class="trend-button" onclick="showTrendModal('充电网络站桩数', '${category}')">点击查看今年趋势</button>
+                            <div class="kpi-header">${title}</div>
+                            <div class="kpi-split-values">
+                                <div class="kpi-split-item">
+                                    <div class="kpi-split-label">站数</div>
+                                    <div class="kpi-split-value">${this.formatNumber(stationData.stations)}</div>
+                                </div>
+                                <div class="kpi-split-item">
+                                    <div class="kpi-split-label">桩数</div>
+                                    <div class="kpi-split-value">${this.formatNumber(stationData.piles)}</div>
+                                </div>
+                            </div>
+                            ${targetData ? `
+                                <div class="kpi-target">全年目标：站数 ${this.formatNumber(targetData)}</div>
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="kpi-progress ${progress.class}">达成进度：${progress.value}%</div>
+                                    <div class="kpi-progress ${timeProgressColor}">时间进度：${timeProgress}%</div>
+                                </div>
+                            ` : ''}
+                            ${this.renderSubDetails(data, category)}
+                        </div>
+                    `;
+                };
+
+                const interconnectHtml = `
+                    <div class="kpi-card">
+                        <div class="kpi-header">互联互通</div>
+                        <div class="kpi-detail">
+                            <div class="kpi-detail-item">
+                                <span>全量站数</span>
+                                <span>${this.formatNumber(data['互联互通全量']?.stations)}</span>
+                            </div>
+                            <div class="kpi-detail-item">
+                                <span>全量桩数</span>
+                                <span>${this.formatNumber(data['互联互通全量']?.piles)}</span>
+                            </div>
+                            <div class="kpi-detail-item">
+                                <span>优选站数</span>
+                                <span>${this.formatNumber(data['互联互通优选']?.stations)}</span>
+                            </div>
+                            <div class="kpi-detail-item">
+                                <span>优选桩数</span>
+                                <span>${this.formatNumber(data['互联互通优选']?.piles)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                return `
+                    <div class="card">
+                        <h2 class="card-title">充电网络站桩数</h2>
+                        <button class="detail-button" onclick="showDetailPage('充电网络站桩数')">查看详细数据</button>
+                        <div class="kpi-grid">
+                            ${createStationCard('全国整体', '全国整体', true)}
+                            ${createStationCard('城市整体', '城市整体')}
+                            ${createStationCard('高速整体', '高速整体')}
+                            ${createStationCard('旅游线路', '旅游线路')}
+                            ${interconnectHtml}
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderRevenue(data) {
+                return this.renderGenericMetric(data, '充电网络收入', '元');
+            },
+
+            renderCharge(data) {
+                return this.renderGenericMetric(data, '总充电量', '度');
+            },
+
+            renderDailyRevenue(data) {
+                return this.renderGenericMetric(data, '单枪日服务费收入', '元', false); // 不显示互联互通
+            },
+
+            renderDailyPower(data) {
+                return this.renderGenericMetric(data, '单枪日电量', '度', false); // 不显示互联互通
+            },
+
+            renderGenericMetric(data, title, unit, showInterconnect = true) {
+                if (!data) return '';
+
+                const createCard = (cardTitle, category, isFull = false) => {
+                    const value = data[category];
+                    if (value === undefined) return '';
+
+                    const targetData = this.getTarget(title, category);
+                    const timeProgress = Number(this.getTimeProgress());
+
+                    // 判断是否需要显示进度（单枪日服务费收入和单枪日电量不显示进度）
+                    const showProgress = title !== '单枪日服务费收入' && title !== '单枪日电量';
+
+                    // 获取时间进度
+                    const progress = showProgress ? this.calculateProgress(
+                        value,
+                        targetData,
+                        timeProgress,
+                        title,      // 传递指标名称
+                        category    // 传递类别
+                    ) : null;
+                    const timeProgressColor = showProgress ? this.getTimeProgressColor(progress.value, timeProgress) : '';
+
+                    return `
+                    <div class="${isFull ? 'kpi-card-full' : 'kpi-card'}">
+                        <button class="trend-button" onclick="showTrendModal('${title}', '${category}')">点击查看今年趋势</button>
+                        <div class="kpi-header">${cardTitle}</div>
+                        <div class="kpi-value">${this.formatNumber(value)}${unit}</div>
+                        ${targetData && showProgress ? `
+                            <div class="kpi-target">全年目标：${this.formatNumber(targetData)}${unit}</div>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div class="kpi-progress ${progress.class}">达成进度：${progress.value}%</div>
+                                <div class="kpi-progress ${timeProgressColor}">时间进度：${timeProgress}%</div>
+                            </div>
+                        ` : targetData && !showProgress ? `
+                            <div class="kpi-target">全年目标：${this.formatNumber(targetData)}${unit}</div>
+                        ` : ''}
+                        ${this.renderSubDetails(data, category)}
+                    </div>
+                `;
+                };
+
+                // 根据标题判断是否需要显示互联互通
+                const hideInterconnect = (title === '单枪日服务费收入' || title === '单枪日电量');
+
+                return `
+                <div class="card">
+                    <h2 class="card-title">${title}</h2>
+                    <button class="detail-button" onclick="showDetailPage('${title}')">查看详细数据</button>
+                    <div class="kpi-grid">
+                        ${createCard('全国整体', '全国整体', true)}
+                        ${createCard('城市整体', '城市整体')}
+                        ${createCard('高速整体', '高速整体')}
+                        ${createCard('旅游线路', '旅游线路')}
+                        ${!hideInterconnect && showInterconnect ? createCard('互联互通', '互联互通') : ''}
+                    </div>
+                </div>
+            `;
+            },
+
+            renderPenetration(data) {
+                if (!data) return '';
+
+                const penetrationTargets = dashboardData['目标']['理想车主公充电量渗透率'] || {};
+                const timeProgress = Number(this.getTimeProgress());
+
+                const createModelList = (models) => {
+                    return models.map(model => `
+                        <div class="kpi-detail-item">
+                            <span>${model}</span>
+                            <span>${data[model] || '--'}%</span>
+                        </div>
+                    `).join('');
+                };
+
+                // 使用 calculateProgress 方法计算全部车型整体的达成进度
+                const overallProgressObj = this.calculateProgress(
+                    data['全部车型整体'],
+                    penetrationTargets['全部车型整体'],
+                    timeProgress,
+                    '理想车主公充电量渗透率',
+                    '全部车型整体'
+                );
+                const overallProgress = overallProgressObj.value;
+                const overallProgressClass = overallProgressObj.class;
+                const overallTimeColor = this.getTimeProgressColor(overallProgress, timeProgress);
+
+                // 使用 calculateProgress 方法计算增程的达成进度
+                const phevProgressObj = this.calculateProgress(
+                    data['增程整体'],
+                    penetrationTargets['增程'],
+                    timeProgress,
+                    '理想车主公充电量渗透率',
+                    '增程整体'
+                );
+                const phevProgress = phevProgressObj.value;
+                const phevProgressClass = phevProgressObj.class;
+                const phevTimeColor = this.getTimeProgressColor(phevProgress, timeProgress);
+
+                // 使用 calculateProgress 方法计算纯电的达成进度
+                const bevProgressObj = this.calculateProgress(
+                    data['纯电整体'],
+                    penetrationTargets['纯电'],
+                    timeProgress,
+                    '理想车主公充电量渗透率',
+                    '纯电整体'
+                );
+                const bevProgress = bevProgressObj.value;
+                const bevProgressClass = bevProgressObj.class;
+                const bevTimeColor = this.getTimeProgressColor(bevProgress, timeProgress);
+
+                return `
+                    <div class="card">
+                        <h2 class="card-title">理想车主公充电量渗透率</h2>
+                        <div class="kpi-grid">
+                            <!-- 新增全部车型整体指标卡 -->
+                            <div class="kpi-card-full">
+                                <button class="trend-button" onclick="showPenetrationTrend('all')">点击查看今年趋势</button>
+                                <div class="kpi-header">全部车型整体</div>
+                                <div class="kpi-value">${data['全部车型整体'] || '--'}%</div>
+                                <div class="kpi-target">${this.getPeriodName()}目标：${penetrationTargets['全部车型整体'] || '--'}%</div>
+                                ${overallProgress !== '--' ? `
+                                    <div style="display: flex; align-items: center; gap: 16px;">
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <button class="trend-button" onclick="showPenetrationTrend('phev')">点击查看今年趋势</button>
+                                <h3 style="font-size: 18px; margin-bottom: 16px;">增程车型</h3>
+                                <div class="kpi-value" style="font-size: 24px;">${data['增程整体'] || '--'}%</div>
+                                <div class="kpi-target">2025年全年目标：${penetrationTargets['增程'] || '--'}%</div>
+                                ${phevProgress !== '--' ? `
+                                    <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px;">
+                                    </div>
+                                ` : ''}
+                                <div class="kpi-detail" style="margin-top: 16px;">
+                                    ${createModelList(['L6', 'L7', 'L8', 'L9', 'ONE'])}
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <button class="trend-button" onclick="showPenetrationTrend('bev')">点击查看今年趋势</button>
+                                <h3 style="font-size: 18px; margin-bottom: 16px;">纯电车型</h3>
+                                <div class="kpi-value" style="font-size: 24px;">${data['纯电整体'] || '--'}%</div>
+                                <div class="kpi-target">2025年全年目标：${penetrationTargets['纯电'] || '--'}%</div>
+                                ${bevProgress !== '--' ? `
+                                    <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px;">
+                                    </div>
+                                ` : ''}
+                                <div class="kpi-detail" style="margin-top: 16px;">
+                                    ${createModelList(['MEGA', 'i8', 'i6'])}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            renderSubDetails(data, category) {
+                const subTypes = {
+                    '城市整体': ['城市自营', '城市加盟', '城市门店'],
+                    '高速整体': ['高速线上', '高速线下']
+                };
+
+                if (!subTypes[category]) return '';
+
+                const details = subTypes[category].map(sub => {
+                    const value = data[sub];
+                    if (value === undefined) return '';
+
+                    // 如果是站桩数，显示站数和桩数
+                    if (typeof value === 'object' && value.stations !== undefined) {
+                        return `
+                            <div class="kpi-detail-item">
+                                <span>${sub}</span>
+                                <span>站数: ${this.formatNumber(value.stations)} | 桩数: ${this.formatNumber(value.piles)}</span>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="kpi-detail-item">
+                            <span>${sub}</span>
+                            <span>${this.formatNumber(value)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                return details ? `<div class="kpi-detail">${details}</div>` : '';
+            },
+
+            renderUserLayer(layer) {
+                const container = document.getElementById('layer-contents');
+                const layerData = dashboardData['用户分层'];
+
+                if (!layerData) return;
+
+                let html = '';
+
+                if (layer === 'all') {
+                    html = this.renderAllUserLayer(layerData);
+                } else if (layer === 'phev') {
+                    html = this.renderModelUserLayer(layerData, '增程', ['L6', 'L7', 'L8', 'L9', 'ONE']);
+                } else if (layer === 'bev') {
+                    html = this.renderModelUserLayer(layerData, '纯电', ['MEGA', 'i8', 'i6']);
+                }
+
+                container.innerHTML = `<div class="metric-content active">${html}</div>`;
+            },
+
+            // 修正获取时间进度的方法
+            getTimeProgress() {
+                console.log('=== getTimeProgress 调试开始 ===');
+
+                const dataDate = dashboardData['数据日期'] || new Date().toISOString().split('T')[0];
+                console.log('数据日期:', dataDate);
+
+                const dateParts = dataDate.split('-');
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]);
+                const day = parseInt(dateParts[2]);
+
+                console.log('解析的日期:', year, month, day);
+
+                const currentDate = new Date(year, month - 1, day);
+                let timeProgress = 0;
+
+                if (month <= 6) {
+                    // H1: 计算H1的时间进度
+                    const h1Start = new Date(year, 0, 1);
+                    const h1End = new Date(year, 5, 30);
+                    const totalDays = Math.floor((h1End - h1Start) / (1000 * 60 * 60 * 24)) + 1;
+                    const elapsedDays = Math.floor((currentDate - h1Start) / (1000 * 60 * 60 * 24)) + 1;
+                    timeProgress = Math.round((elapsedDays / totalDays) * 100);
+                    console.log('H1计算:', '总天数:', totalDays, '已过天数:', elapsedDays, '进度:', timeProgress);
+                } else {
+                    // H2: 计算全年的时间进度
+                    const yearStart = new Date(year, 0, 1);
+                    const yearEnd = new Date(year, 11, 31);
+                    const totalDays = Math.floor((yearEnd - yearStart) / (1000 * 60 * 60 * 24)) + 1;
+                    const elapsedDays = Math.floor((currentDate - yearStart) / (1000 * 60 * 60 * 24)) + 1;
+                    timeProgress = Math.round((elapsedDays / totalDays) * 100);
+                    console.log('H2(全年)计算:', '总天数:', totalDays, '已过天数:', elapsedDays, '进度:', timeProgress);
+                }
+
+                const result = Math.max(0, Math.min(100, timeProgress));
+                console.log('最终返回值:', result, '类型:', typeof result);
+                console.log('=== getTimeProgress 调试结束 ===');
+
+                return result;
+            },
+
+            // 添加计算时间进度颜色的方法
+            getTimeProgressColor(achieveProgress, timeProgress) {
+                if (!achieveProgress || achieveProgress === '--' || !timeProgress) {
+                    return '';
+                }
+
+                const achieve = parseFloat(achieveProgress);
+                const time = parseFloat(timeProgress);
+
+
+                if (achieve > time + 5) {
+                    return 'success'; // 绿色
+                } else if (achieve >= time - 5 && achieve <= time + 5) {
+                    return 'warning'; // 黄色
+                } else {
+                    return 'danger'; // 红色
+                }
+            },
+
+            renderAllUserLayer(data) {
+                if (!data || !data['分层数据']) {
+                    console.error('用户分层数据不存在');
+                    return '<div class="card">暂无用户分层数据</div>';
+                }
+                const layerData = data['分层数据']['全量_全量'];
+                if (!layerData) {
+                    console.error('全量用户数据不存在');
+                    return '<div class="card">暂无全量用户数据</div>';
+                }
+                const vehicleData = data['三方车辆充电量'];
+
+                if (!layerData) return '';
+
+                const metrics = [
+                    { key: '活跃用户占比', title: '活跃占比' },
+                    { key: '潜在流失用户占比', title: '潜在流失占比' },
+                    { key: '流失用户占比', title: '流失占比' },
+                    { key: '从未使用用户占比', title: '从未使用占比' },
+                    { key: '新用户首充率', title: '新用户首充率' }
+                ];
+
+                const cards = metrics.map(m => `
+                    <div class="kpi-card">
+                        <div class="kpi-header">${m.title}</div>
+                        <div class="kpi-value">${layerData[m.key] || '--'}%</div>
+                    </div>
+                `).join('');
+
+                const vehicleTable = vehicleData && vehicleData.length > 0 ? `
+                    <div class="card" style="margin-top: 32px;">
+                        <h2 class="card-title">充电量Top18车型</h2>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">排名</th>
+                                    <th>车型</th>
+                                    <th class="number">充电车数</th>
+                                    <th class="number">充电车数%</th>
+                                    <th class="number">充电量(度)</th>
+                                    <th class="number">充电量%</th>
+                                    <th class="number">单车月均充电量(度)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${vehicleData.map((v, i) => `
+                                    <tr>
+                                        <td>${i + 1}</td>
+                                        <td>${v['车型']}</td>
+                                        <td class="number">${this.formatNumber(v['充电车数'])}</td>
+                                        <td class="number">${v['充电车数%']}%</td>
+                                        <td class="number">${this.formatNumber(v['充电量'])}</td>
+                                        <td class="number">${v['充电量%']}%</td>
+                                        <td class="number">${this.formatNumber(v['单车月均充电量'])}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="card">
+                        <h2 class="card-title">全量车主分层情况</h2>
+                        <button class="detail-button" onclick="showUserLayerTrend('全量车主')">点击查看今年趋势</button>
+                        <div class="kpi-grid">${cards}</div>
+                    </div>
+                    ${vehicleTable}
+                `;
+            },
+
+            renderModelUserLayer(data, type, models) {
+                const layerData = data['分层数据'];
+
+                const renderModelCard = (model) => {
+                    const key = `${type}_${model}`;
+                    const modelData = layerData[key];
+
+                    if (!modelData) return '';
+
+                    return `
+                        <div class="kpi-card">
+                            <button class="trend-button" onclick="showUserLayerTrend('${model}')">点击查看今年趋势</button>
+                            <div class="kpi-header">${model}</div>
+                            <div class="kpi-detail" style="margin-top: 12px;">
+                                <div class="kpi-detail-item">
+                                    <span>活跃用户占比</span>
+                                    <span>${modelData['活跃用户占比'] || '--'}%</span>
+                                </div>
+                                <div class="kpi-detail-item">
+                                    <span>潜在流失用户占比</span>
+                                    <span>${modelData['潜在流失用户占比'] || '--'}%</span>
+                                </div>
+                                <div class="kpi-detail-item">
+                                    <span>流失用户占比</span>
+                                    <span>${modelData['流失用户占比'] || '--'}%</span>
+                                </div>
+                                <div class="kpi-detail-item">
+                                    <span>从未使用用户占比</span>
+                                    <span>${modelData['从未使用用户占比'] || '--'}%</span>
+                                </div>
+                                <div class="kpi-detail-item">
+                                    <span>新用户首充率</span>
+                                    <span>${modelData['新用户首充率'] || '--'}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                };
+
+                // 整体数据
+                const overallKey = `${type}_整体`;
+                const overallData = layerData[overallKey];
+
+                return `
+                    <div class="card">
+                        <h2 class="card-title">${type}车型分层情况</h2>
+                        <div class="kpi-grid">
+                            ${overallData ? `
+                                <div class="kpi-card-full">
+                                    <button class="trend-button" onclick="showUserLayerTrend('${type}整体')">点击查看今年趋势</button>
+                                    <div class="kpi-header">${type}整体</div>
+                                    <div class="kpi-detail" style="margin-top: 12px;">
+                                        <div class="kpi-detail-item">
+                                            <span>活跃用户占比</span>
+                                            <span>${overallData['活跃用户占比'] || '--'}%</span>
+                                        </div>
+                                        <div class="kpi-detail-item">
+                                            <span>潜在流失用户占比</span>
+                                            <span>${overallData['潜在流失用户占比'] || '--'}%</span>
+                                        </div>
+                                        <div class="kpi-detail-item">
+                                            <span>流失用户占比</span>
+                                            <span>${overallData['流失用户占比'] || '--'}%</span>
+                                        </div>
+                                        <div class="kpi-detail-item">
+                                            <span>从未使用用户占比</span>
+                                            <span>${overallData['从未使用用户占比'] || '--'}%</span>
+                                        </div>
+                                        <div class="kpi-detail-item">
+                                            <span>新用户首充率</span>
+                                            <span>${overallData['新用户首充率'] || '--'}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${models.map(model => renderModelCard(model)).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderRegionContent(type) {
+                const container = document.getElementById('region-contents');
+                const regionData = dashboardData['区域数据'];
+
+                if (!regionData || !regionData['区域统计数据']) {
+                    container.innerHTML = '<div class="card">暂无数据</div>';
+                    return;
+                }
+
+                const regionStats = regionData['区域统计数据'];
+                const basicRegions = ['东一区', '东二区', '南区', '西区', '北区', '中区'];
+
+                if (type === 'revenue') {
+                    this.renderRegionRevenue(container, regionStats, basicRegions);
+                } else if (type === 'daily-revenue') {
+                    this.renderRegionDailyRevenue(container, regionStats, basicRegions);
+                } else if (type === 'daily-power') {
+                    this.renderRegionDailyPower(container, regionStats, basicRegions);
+                } else if (type === 'detail-report') {
+                    this.renderRegionDetailReport(container, regionStats, basicRegions);
+                }
+            },
+
+            renderRegionRevenue(container, regionStats, regions) {
+                const nationalTotal = regionStats['全国']?.['区域整体']?.revenue || 0;
+
+                const cards = regions.map(region => {
+                    const stats = regionStats[region];
+                    if (!stats) return '';
+
+                    const regionTotal = stats['区域整体'].revenue;
+                    const percent = nationalTotal > 0 ? (regionTotal / nationalTotal * 100).toFixed(1) : '0.0';
+
+                    return `
+            <div class="kpi-card">
+                <div class="kpi-header">${region}</div>
+                <div class="kpi-value">${this.formatNumber(regionTotal)}元</div>
+                <div class="kpi-target">占全国比例：${percent}%</div>
+                <div class="kpi-detail">
+                    <div class="kpi-detail-item">
+                        <span>城市自建</span>
+                        <span>${this.formatNumber(stats['城市自建'].revenue)}</span>
+                    </div>
+                    <div class="kpi-detail-item">
+                        <span>城市加盟</span>
+                        <span>${this.formatNumber(stats['城市加盟'].revenue)}</span>
+                    </div>
+                    <div class="kpi-detail-item">
+                        <span>城市门店</span>
+                        <span>${this.formatNumber(stats['城市门店'].revenue)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+                }).join('');
+
+                container.innerHTML = `
+        <div class="metric-content active">
+            <div class="card">
+                <h2 class="card-title">充电网络收入</h2>
+                <div class="kpi-card-full" style="margin-bottom: 24px;">
+                    <div class="kpi-header">全国整体</div>
+                    <div class="kpi-value">${this.formatNumber(nationalTotal)}元</div>
+                </div>
+                <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    ${cards}
+                </div>
+            </div>
+        </div>
+    `;
+            },
+
+            renderRegionDailyRevenue(container, regionStats, regions) {
+                // 计算全国整体的单枪日收入
+                let nationalDailyRevenue = 0;
+                if (regionStats['全国'] && regionStats['全国']['区域整体']) {
+                    nationalDailyRevenue = regionStats['全国']['区域整体'].daily_revenue || 0;
+                } else {
+                    // 如果没有全国数据，计算六大区域的平均值
+                    let totalRevenue = 0;
+                    let validRegions = 0;
+                    regions.forEach(region => {
+                        if (regionStats[region] && regionStats[region]['区域整体'] && regionStats[region]['区域整体'].daily_revenue) {
+                            totalRevenue += regionStats[region]['区域整体'].daily_revenue;
+                            validRegions++;
+                        }
+                    });
+                    nationalDailyRevenue = validRegions > 0 ? totalRevenue / validRegions : 0;
+                }
+
+                const cards = regions.map(region => {
+                    const stats = regionStats[region];
+                    if (!stats) return '';
+
+                    return `
+            <div class="kpi-card">
+                <div class="kpi-header">${region}</div>
+                <div class="kpi-value">${this.formatNumber(stats['区域整体'].daily_revenue, 1)}元</div>
+                <div class="kpi-detail">
+                    <div class="kpi-detail-item">
+                        <span>城市自建</span>
+                        <span>${this.formatNumber(stats['城市自建'].daily_revenue, 1)}</span>
+                    </div>
+                    <div class="kpi-detail-item">
+                        <span>城市加盟</span>
+                        <span>${this.formatNumber(stats['城市加盟'].daily_revenue, 1)}</span>
+                    </div>
+                    <div class="kpi-detail-item">
+                        <span>城市门店</span>
+                        <span>${this.formatNumber(stats['城市门店'].daily_revenue, 1)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+                }).join('');
+
+                container.innerHTML = `
+        <div class="metric-content active">
+            <div class="card">
+                <h2 class="card-title">单枪日收入</h2>
+                <div class="kpi-card-full" style="margin-bottom: 24px;">
+                    <div class="kpi-header">全国整体</div>
+                    <div class="kpi-value">${this.formatNumber(nationalDailyRevenue, 1)}元</div>
+                    ${regionStats['全国'] ? `
+                    ` : ''}
+                </div>
+                <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    ${cards}
+                </div>
+            </div>
+        </div>
+    `;
+            },
+            renderRegionDailyPower(container, regionStats, regions) {
+                // 计算全国整体的单枪日电量
+                let nationalDailyPower = 0;
+                if (regionStats['全国'] && regionStats['全国']['区域整体']) {
+                    nationalDailyPower = regionStats['全国']['区域整体'].daily_power || 0;
+                } else {
+                    // 如果没有全国数据，计算六大区域的平均值
+                    let totalPower = 0;
+                    let validRegions = 0;
+                    regions.forEach(region => {
+                        if (regionStats[region] && regionStats[region]['区域整体'] && regionStats[region]['区域整体'].daily_power) {
+                            totalPower += regionStats[region]['区域整体'].daily_power;
+                            validRegions++;
+                        }
+                    });
+                    nationalDailyPower = validRegions > 0 ? totalPower / validRegions : 0;
+                }
+
+                const cards = regions.map(region => {
+                    const stats = regionStats[region];
+                    if (!stats) return '';
+
+                    return `
+            <div class="kpi-card">
+                <div class="kpi-header">${region}</div>
+                <div class="kpi-value">${this.formatNumber(stats['区域整体'].daily_power)}度</div>
+                <div class="kpi-detail">
+                    <div class="kpi-detail-item">
+                        <span>城市自建</span>
+                        <span>${this.formatNumber(stats['城市自建'].daily_power)}</span>
+                    </div>
+                    <div class="kpi-detail-item">
+                        <span>城市加盟</span>
+                        <span>${this.formatNumber(stats['城市加盟'].daily_power)}</span>
+                    </div>
+                    <div class="kpi-detail-item">
+                        <span>城市门店</span>
+                        <span>${this.formatNumber(stats['城市门店'].daily_power)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+                }).join('');
+
+                container.innerHTML = `
+        <div class="metric-content active">
+            <div class="card">
+                <h2 class="card-title">单枪日电量</h2>
+                <div class="kpi-card-full" style="margin-bottom: 24px;">
+                    <div class="kpi-header">全国整体</div>
+                    <div class="kpi-value">${this.formatNumber(nationalDailyPower)}度</div>
+                    ${regionStats['全国'] ? `
+                    ` : ''}
+                </div>
+                <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    ${cards}
+                </div>
+            </div>
+        </div>
+    `;
+            },
+            renderRegionDetailReport(container, regionStats, regions) {
+                console.log('=== 渲染详细报表 ===');
+
+                // 获取时长统计数据
+                const durationStats = dashboardData['区域数据']['区域时长统计数据'] || {};
+
+                // 定义时长顺序
+                const durationOrder = ['全部场站', '1个月内', '1-3个月', '3-6个月', '6个月-1年', '1-2年', '2-3年', '超3年'];
+
+                // 构建所有行
+                const allRows = [];
+
+                // 遍历每个时长段
+                durationOrder.forEach(duration => {
+                    // 确定数据源
+                    let currentStats;
+                    if (duration === '全部场站') {
+                        currentStats = regionStats;
+                    } else {
+                        currentStats = durationStats[duration] || {};
+                    }
+
+                    // 如果该时长段有数据，则添加行
+                    if (Object.keys(currentStats).length > 0) {
+                        // 先添加全国行
+                        if (currentStats['全国']) {
+                            allRows.push(this.createTableRow(duration, '全国', currentStats['全国'], true));
+                        }
+
+                        // 然后添加六大区域行
+                        regions.forEach(region => {
+                            if (currentStats[region]) {
+                                allRows.push(this.createTableRow('', region, currentStats[region], false));
+                            }
+                        });
+                    }
+                });
+
+                // 生成表格HTML
+                const tableHTML = `
+                    <style>
+                        .region-detail-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 14px;
+                            background: white;
+                        }
+                        
+                        .region-detail-wrapper {
+                            position: relative;
+                            max-height: 600px;
+                            overflow: auto;
+                            border: 1px solid #e8e8e8;
+                            border-radius: 12px;
+                        }
+                        
+                        .region-detail-table thead th {
+                            background: linear-gradient(135deg, #002D28 0%, rgba(0, 45, 40, 0.9) 100%);
+                            color: white;
+                            padding: 12px 8px;
+                            font-weight: 600;
+                            font-size: 13px;
+                            position: sticky;
+                            top: 0;
+                            z-index: 10;
+                            border-bottom: 2px solid #CEA472;
+                        }
+                        
+                        /* 冻结第二行表头（指标名称行） */
+                        .region-detail-table thead tr:nth-child(2) th {
+                            position: sticky;
+                            top: 48px; /* 第一行高度 */
+                            z-index: 10;
+                        }
+                        
+                        .region-detail-table tbody tr {
+                            border-bottom: 1px solid #f0f0f0;
+                        }
+                        
+                        .region-detail-table tbody tr:hover {
+                            background-color: #f8f9fa;
+                        }
+                        
+                        .region-detail-table td {
+                            padding: 10px 8px;
+                            text-align: right;
+                            font-size: 13px;
+                        }
+                        
+                        .region-detail-table td:first-child,
+                        .region-detail-table td:nth-child(2) {
+                            text-align: left;
+                            font-weight: 500;
+                            position: sticky;
+                            background: white;
+                            z-index: 1;
+                        }
+                        
+                        .region-detail-table td:first-child {
+                            left: 0;
+                            min-width: 100px;
+                        }
+                        
+                        .region-detail-table td:nth-child(2) {
+                            left: 100px;
+                            min-width: 80px;
+                            border-right: 2px solid #e8e8e8;
+                        }
+                        
+                        .region-detail-table thead th:first-child,
+                        .region-detail-table thead th:nth-child(2) {
+                            position: sticky;
+                            z-index: 11;
+                        }
+                        
+                        .region-detail-table thead th:first-child {
+                            left: 0;
+                        }
+                        
+                        .region-detail-table thead th:nth-child(2) {
+                            left: 100px;
+                        }
+                        
+                        .national-row {
+                            background-color: #f8f9fa;
+                            font-weight: bold;
+                        }
+                        
+                        .number {
+                            text-align: right !important;
+                        }
+                    </style>
+                    
+                    <div class="metric-content active">
+                        <div class="card">
+                            <h2 class="card-title">各区核心指标对比</h2>
+                            <div class="region-detail-wrapper">
+                                <table class="region-detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2">时间维度</th>
+                                            <th rowspan="2">区域</th>
+                                            <th colspan="4" style="text-align: center;">单枪日收入(元)</th>
+                                            <th colspan="4" style="text-align: center;">单枪日电量(度)</th>
+                                            <th colspan="4" style="text-align: center;">充电网络收入(元)</th>
+                                        </tr>
+                                        <tr>
+                                            <!-- 单枪日收入列 -->
+                                            <th class="number">区域整体</th>
+                                            <th class="number">城市自建</th>
+                                            <th class="number">城市加盟</th>
+                                            <th class="number">城市门店</th>
+                                            <!-- 单枪日电量列 -->
+                                            <th class="number">区域整体</th>
+                                            <th class="number">城市自建</th>
+                                            <th class="number">城市加盟</th>
+                                            <th class="number">城市门店</th>
+                                            <!-- 充电网络收入列 -->
+                                            <th class="number">区域整体</th>
+                                            <th class="number">城市自建</th>
+                                            <th class="number">城市加盟</th>
+                                            <th class="number">城市门店</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${allRows.join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = tableHTML;
+            },
+
+            createTableRow(duration, region, stats, isNationalRow) {
+                const rowClass = isNationalRow ? 'national-row' : '';
+
+                return `
+                    <tr class="${rowClass}">
+                        <td>${duration}</td>
+                        <td>${region}</td>
+                        <!-- 单枪日收入列 -->
+                        <td class="number">${this.formatNumber(stats['区域整体']?.daily_revenue || 0, 1)}</td>
+                        <td class="number">${this.formatNumber(stats['城市自建']?.daily_revenue || 0, 1)}</td>                        <td class="number">${this.formatNumber(stats['城市自建']?.daily_revenue || 0, 1)}</td>
+                        <td class="number">${this.formatNumber(stats['城市加盟']?.daily_revenue || 0, 1)}</td>
+                        <td class="number">${this.formatNumber(stats['城市门店']?.daily_revenue || 0, 1)}</td>
+                        <!-- 单枪日电量列 -->
+                        <td class="number">${this.formatNumber(stats['区域整体']?.daily_power || 0)}</td>
+                        <td class="number">${this.formatNumber(stats['城市自建']?.daily_power || 0)}</td>
+                        <td class="number">${this.formatNumber(stats['城市加盟']?.daily_power || 0)}</td>
+                        <td class="number">${this.formatNumber(stats['城市门店']?.daily_power || 0)}</td>
+                        <!-- 充电网络收入列 -->
+                        <td class="number">${this.formatNumber(stats['区域整体']?.revenue || 0)}</td>
+                        <td class="number">${this.formatNumber(stats['城市自建']?.revenue || 0)}</td>
+                        <td class="number">${this.formatNumber(stats['城市加盟']?.revenue || 0)}</td>
+                        <td class="number">${this.formatNumber(stats['城市门店']?.revenue || 0)}</td>
+                    </tr>
+                `;
+            },
+            createTableRow(duration, region, stats, isNationalRow) {
+                const rowStyle = isNationalRow ? 'style="background-color: #f8f9fa; font-weight: bold;"' : '';
+
+                return `
+                <tr ${rowStyle}>
+                    <td>${duration}</td>
+                    <td>${region}</td>
+                    <!-- 单枪日收入列 -->
+                    <td class="number">${this.formatNumber(stats['区域整体']?.daily_revenue || 0, 1)}</td>
+                    <td class="number">${this.formatNumber(stats['城市自建']?.daily_revenue || 0, 1)}</td>
+                    <td class="number">${this.formatNumber(stats['城市加盟']?.daily_revenue || 0, 1)}</td>
+                    <td class="number">${this.formatNumber(stats['城市门店']?.daily_revenue || 0, 1)}</td>
+                    <!-- 单枪日电量列 -->
+                    <td class="number">${this.formatNumber(stats['区域整体']?.daily_power || 0)}</td>
+                    <td class="number">${this.formatNumber(stats['城市自建']?.daily_power || 0)}</td>
+                    <td class="number">${this.formatNumber(stats['城市加盟']?.daily_power || 0)}</td>
+                    <td class="number">${this.formatNumber(stats['城市门店']?.daily_power || 0)}</td>
+                    <!-- 充电网络收入列 -->
+                    <td class="number">${this.formatNumber(stats['区域整体']?.revenue || 0)}</td>
+                    <td class="number">${this.formatNumber(stats['城市自建']?.revenue || 0)}</td>
+                    <td class="number">${this.formatNumber(stats['城市加盟']?.revenue || 0)}</td>
+                    <td class="number">${this.formatNumber(stats['城市门店']?.revenue || 0)}</td>
+                </tr>
+            `;
+            },
+
+            // 新增辅助方法
+            getRegionDataFromMonthly() {
+                const monthlyData = dashboardData['分月指标达成情况'];
+                if (!monthlyData || monthlyData.length <= 1) return null;
+
+                const latestMonth = dashboardData['最新月份'];
+                const headers = monthlyData[0];
+                const timeCol = headers.indexOf('时间（月）');
+
+                // 筛选最新月份数据
+                const latestData = [headers];
+                for (let i = 1; i < monthlyData.length; i++) {
+                    const month = this._parse_month(monthlyData[i][timeCol]);
+                    if (month === latestMonth) {
+                        latestData.push(monthlyData[i]);
+                    }
+                }
+
+                return latestData.length > 1 ? latestData : null;
+            },
+            // 添加月份解析辅助方法
+            _parse_month(dateStr) {
+                if (!dateStr) return null;
+
+                try {
+                    if (dateStr.includes('/')) {
+                        const parts = dateStr.split('/');
+                        if (parts.length >= 2) {
+                            return `${parts[0]}-${parts[1].padStart(2, '0')}`;
+                        }
+                    } else if (dateStr.includes('-')) {
+                        return dateStr.substring(0, 7);
+                    }
+                } catch (e) {
+                    console.error('解析月份失败:', e);
+                }
+                return null;
+            },
+
+            renderRegionMetric(container, data, metric) {
+                const regions = ['东一区', '东二区', '南区', '西区', '北区', '中区'];
+                const headers = data[0];
+
+                // 列索引
+                const cols = {
+                    region: headers.indexOf('区域'),
+                    mainType: headers.indexOf('场站主类型'),
+                    subType: headers.indexOf('场站子类型'),
+                    revenue: headers.indexOf('充电收入'),
+                    power: headers.indexOf('充电量'),
+                    piles: headers.indexOf('桩数量'),
+                    days: headers.indexOf('当月运营天数'),
+                    serviceRevenue: headers.indexOf('充电服务费收入')
+                };
+
+                // 聚合区域数据
+                const regionStats = {};
+                let nationalTotal = 0;
+
+                regions.forEach(region => {
+                    regionStats[region] = {
+                        total: { value: 0, piles: 0, days: 0 },
+                        '城市自建': { value: 0, piles: 0, days: 0 },
+                        '城市加盟': { value: 0, piles: 0, days: 0 },
+                        '城市门店': { value: 0, piles: 0, days: 0 }
+                    };
+                });
+
+                // 处理数据
+                for (let i = 1; i < data.length; i++) {
+                    const row = data[i];
+                    const region = row[cols.region];
+                    const mainType = row[cols.mainType];
+                    const subType = row[cols.subType];
+
+                    if (!regions.includes(region) || mainType !== '城市') continue;
+
+                    const piles = parseFloat(row[cols.piles] || 0);
+                    const days = parseFloat(row[cols.days] || 1);
+                    let value = 0;
+
+                    if (metric === 'revenue') {
+                        value = parseFloat(row[cols.revenue] || 0);
+                    } else if (metric === 'daily-revenue') {
+                        const serviceRevenue = parseFloat(row[cols.serviceRevenue] || 0);
+                        value = piles > 0 && days > 0 ? serviceRevenue / piles / days : 0;
+                    } else if (metric === 'daily-power') {
+                        const power = parseFloat(row[cols.power] || 0);
+                        value = piles > 0 && days > 0 ? power / piles / days : 0;
+                    }
+
+                    // 更新统计
+                    const category = this.mapSubType(subType);
+                    if (category) {
+                        regionStats[region][category].value += metric === 'revenue' ? value : value * piles;
+                        regionStats[region][category].piles += piles;
+                        regionStats[region][category].days = Math.max(regionStats[region][category].days, days);
+
+                        regionStats[region].total.value += metric === 'revenue' ? value : value * piles;
+                        regionStats[region].total.piles += piles;
+                        regionStats[region].total.days = Math.max(regionStats[region].total.days, days);
+                    }
+                }
+
+                // 计算全国总计
+                regions.forEach(region => {
+                    if (metric === 'revenue') {
+                        nationalTotal += regionStats[region].total.value;
+                    } else {
+                        const stats = regionStats[region].total;
+                        if (stats.piles > 0 && stats.days > 0) {
+                            regionStats[region].total.avgValue = stats.value / stats.piles;
+                        }
+                    }
+                });
+
+                // 渲染
+                const title = {
+                    'revenue': '充电网络收入',
+                    'daily-revenue': '单枪日收入',
+                    'daily-power': '单枪日电量'
+                }[metric];
+
+                const unit = {
+                    'revenue': '元',
+                    'daily-revenue': '元',
+                    'daily-power': '度'
+                }[metric];
+
+                const cards = regions.map(region => {
+                    const stats = regionStats[region];
+                    const totalValue = metric === 'revenue' ? stats.total.value :
+                        (stats.total.avgValue || (stats.total.piles > 0 ? stats.total.value / stats.total.piles : 0));
+                    const percent = metric === 'revenue' && nationalTotal > 0 ?
+                        (stats.total.value / nationalTotal * 100).toFixed(1) : '--';
+
+                    return `
+                        <div class="kpi-card">
+                            <div class="kpi-header">${region}</div>
+                            <div class="kpi-value">${this.formatNumber(totalValue, 1)}${unit}</div>
+                            ${metric === 'revenue' ? `<div class="kpi-target">占全国比例：${percent}%</div>` : ''}
+                            <div class="kpi-detail">
+                                ${['城市自建', '城市加盟', '城市门店'].map(cat => {
+                        const catValue = metric === 'revenue' ? stats[cat].value :
+                            (stats[cat].piles > 0 ? stats[cat].value / stats[cat].piles : 0);
+                        return `
+                                        <div class="kpi-detail-item">
+                                            <span>${cat.replace('城市', '')}</span>
+                                            <span>${this.formatNumber(catValue, 1)}</span>
+                                        </div>
+                                    `;
+                    }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <div class="metric-content active">
+                        <div class="card">
+                            <h2 class="card-title">${title}</h2>
+                            ${metric === 'revenue' ? `
+                                <div class="kpi-card-full" style="margin-bottom: 24px;">
+                                    <div class="kpi-header">全国整体</div>
+                                    <div class="kpi-value">${this.formatNumber(nationalTotal, 1)}元</div>
+                                </div>
+                            ` : ''}
+                            <div class="kpi-grid" style="grid-template-columns: repeat(6, 1fr);">
+                                ${cards}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+
+            processRegionTableData(data, regions) {
+                // 处理逻辑与renderRegionMetric相同，返回表格数据
+                const headers = data[0];
+                const cols = {
+                    region: headers.indexOf('区域'),
+                    mainType: headers.indexOf('场站主类型'),
+                    subType: headers.indexOf('场站子类型'),
+                    revenue: headers.indexOf('充电收入'),
+                    power: headers.indexOf('充电量'),
+                    piles: headers.indexOf('桩数量'),
+                    days: headers.indexOf('当月运营天数'),
+                    serviceRevenue: headers.indexOf('充电服务费收入')
+                };
+
+                const result = [];
+
+                regions.forEach(region => {
+                    const regionData = {
+                        region: region,
+                        revenue: { total: 0, self: 0, franchise: 0, store: 0 },
+                        dailyRevenue: { total: 0, self: 0, franchise: 0, store: 0 },
+                        dailyPower: { total: 0, self: 0, franchise: 0, store: 0 }
+                    };
+
+                    // 聚合该区域数据
+                    for (let i = 1; i < data.length; i++) {
+                        const row = data[i];
+                        if (row[cols.region] !== region || row[cols.mainType] !== '城市') continue;
+
+                        const subType = row[cols.subType];
+                        const revenue = parseFloat(row[cols.revenue] || 0);
+                        const power = parseFloat(row[cols.power] || 0);
+                        const piles = parseFloat(row[cols.piles] || 0);
+                        const days = parseFloat(row[cols.days] || 1);
+                        const serviceRevenue = parseFloat(row[cols.serviceRevenue] || 0);
+
+                        const category = this.mapSubType(subType);
+                        if (category) {
+                            const key = category.replace('城市', '').toLowerCase();
+                            regionData.revenue[key] = revenue;
+                            regionData.dailyRevenue[key] = piles > 0 && days > 0 ? serviceRevenue / piles / days : 0;
+                            regionData.dailyPower[key] = piles > 0 && days > 0 ? power / piles / days : 0;
+                        }
+                    }
+
+                    // 计算总计
+                    regionData.revenue.total = regionData.revenue.self + regionData.revenue.franchise + regionData.revenue.store;
+                    regionData.dailyRevenue.total = (regionData.dailyRevenue.self + regionData.dailyRevenue.franchise + regionData.dailyRevenue.store) / 3;
+                    regionData.dailyPower.total = (regionData.dailyPower.self + regionData.dailyPower.franchise + regionData.dailyPower.store) / 3;
+
+                    // 格式化数据
+                    Object.keys(regionData.revenue).forEach(key => {
+                        regionData.revenue[key] = this.formatNumber(regionData.revenue[key], 1);
+                    });
+                    Object.keys(regionData.dailyRevenue).forEach(key => {
+                        regionData.dailyRevenue[key] = this.formatNumber(regionData.dailyRevenue[key], 1);
+                    });
+                    Object.keys(regionData.dailyPower).forEach(key => {
+                        regionData.dailyPower[key] = this.formatNumber(regionData.dailyPower[key], 1);
+                    });
+
+                    result.push(regionData);
+                });
+
+                return result;
+            },
+
+            renderProvince() {
+                const container = document.getElementById('province-contents');
+                const provinceData = dashboardData['省份指标'];
+
+                if (!provinceData) {
+                    container.innerHTML = '<div class="card">暂无数据</div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="card">
+                        <h2 class="card-title">省份核心指标汇总</h2>
+                        <div class="metric-tabs">
+                            <button class="metric-tab active" data-province-summary="yearly">年度合计</button>
+                            <button class="metric-tab" data-province-summary="lastweek">上周表现</button>
+                        </div>
+                        <div id="province-summary-content"></div>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">核心指标25年by月趋势</h2>
+                        <div class="metric-tabs">
+                            <button class="metric-tab active" data-province-trend="revenue">充电总收入</button>
+                            <button class="metric-tab" data-province-trend="daily-revenue">单枪日服务费收入</button>
+                            <button class="metric-tab" data-province-trend="daily-power">单枪日充电量</button>
+                            <button class="metric-tab" data-province-trend="penetration">车主公充渗透率</button>
+                        </div>
+                        <div class="filter-container" id="province-filter-container"></div>
+                        <div id="province-trend-content"></div>
+                    </div>
+                `;
+
+                // 存储数据供后续使用
+                this.provinceData = provinceData;
+
+                // 初始渲染
+                this.renderProvinceSummary('yearly');
+                this.renderProvinceTrend('revenue');
+            },
+
+            renderProvinceSummary(type) {
+                const container = document.getElementById('province-summary-content');
+                const data = this.provinceData;
+
+                if (!data) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                if (type === 'yearly') {
+                    this.renderProvinceYearly(container, data['年度合计']);
+                } else {
+                    this.renderProvinceLastweek(container, data['上周表现']);
+                }
+            },
+
+            renderProvinceYearly(container, yearlyData) {
+                if (!yearlyData || Object.keys(yearlyData).length === 0) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                const rows = Object.entries(yearlyData).map(([province, data]) => `
+                    <tr>
+                        <td>${province}</td>
+                        <td class="number">${this.formatNumber(data['车主保有量'])}</td>
+                        <td class="number">${data['车主保有量%']}%</td>
+                        <td class="number">${this.formatNumber(data['累计自建场站数'])}</td>
+                        <td class="number">${data['累计自建场站数%']}%</td>
+                        <td class="number">${this.formatNumber(data['最近30天充电车主数'])}</td>
+                        <td class="number">${data['最近30天充电车主数%']}%</td>
+                        <td class="number">${this.formatNumber(data['最近30天充电收入'])}</td>
+                        <td class="number">${data['最近30天充电收入%']}%</td>
+                    </tr>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="city-yearly-wrapper">
+                        <table class="city-yearly-table">
+                            <thead>
+                                <tr>
+                                    <th>省份</th>
+                                    <th class="number">车主保有量</th>
+                                    <th class="number">车主保有量占全国%</th>
+                                    <th class="number">累计自建场站数</th>
+                                    <th class="number">自建场站数占全国%</th>
+                                    <th class="number">最近30天充电车主数</th>
+                                    <th class="number">近30天充电车主数占全国%</th>
+                                    <th class="number">最近30天充电收入</th>
+                                    <th class="number">近30天充电收入占全国%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            },
+
+            renderProvinceLastweek(container, weeklyData) {
+                if (!weeklyData || Object.keys(weeklyData).length === 0) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                const rows = Object.entries(weeklyData).map(([province, data]) => `
+                    <tr>
+                        <td>${province}</td>
+                        <!-- 单枪日服务费收入 -->
+                        <td class="number">${this.formatNumber(data['单枪日收入_总计'], 1)}</td>
+                        <td class="number">${this.formatNumber(data['单枪日收入_高速线上'], 1)}</td>
+                        <td class="number">${this.formatNumber(data['单枪日收入_高速线下'], 1)}</td>
+                        <td class="number">${this.formatNumber(data['单枪日收入_城市自建'], 1)}</td>
+                        <td class="number">${this.formatNumber(data['单枪日收入_城市加盟'], 1)}</td>
+                        <td class="number">${this.formatNumber(data['单枪日收入_城市门店'], 1)}</td>
+                        <td class="number">${this.formatNumber(data['单枪日收入_旅游线路'], 1)}</td>
+                        <!-- 单枪日电量 -->
+                        <td class="number">${this.formatNumber(data['单枪日电量_总计'])}</td>
+                        <td class="number">${this.formatNumber(data['单枪日电量_高速线上'])}</td>
+                        <td class="number">${this.formatNumber(data['单枪日电量_高速线下'])}</td>
+                        <td class="number">${this.formatNumber(data['单枪日电量_城市自建'])}</td>
+                        <td class="number">${this.formatNumber(data['单枪日电量_城市加盟'])}</td>
+                        <td class="number">${this.formatNumber(data['单枪日电量_城市门店'])}</td>
+                        <td class="number">${this.formatNumber(data['单枪日电量_旅游线路'])}</td>
+                        <!-- 车主公充渗透率 -->
+                        <td class="number">${data['渗透率_总计']}%</td>
+                        <td class="number">${data['渗透率_城市']}%</td>
+                        <td class="number">${data['渗透率_高速']}%</td>
+                    </tr>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="province-weekly-wrapper">
+                        <table class="province-weekly-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">省份</th>
+                                    <th colspan="7" style="text-align: center;">单枪日服务费收入(元)</th>
+                                    <th colspan="7" style="text-align: center;">单枪日电量(度)</th>
+                                    <th colspan="3" style="text-align: center;">车主公充渗透率(%)</th>
+                                </tr>
+                                <tr>
+                                    <th class="number">总计</th>
+                                    <th class="number">高速线上</th>
+                                    <th class="number">高速线下</th>
+                                    <th class="number">城市自建</th>
+                                    <th class="number">城市加盟</th>
+                                    <th class="number">城市门店</th>
+                                    <th class="number">旅游线路</th>
+                                    <th class="number">总计</th>
+                                    <th class="number">高速线上</th>
+                                    <th class="number">高速线下</th>
+                                    <th class="number">城市自建</th>
+                                    <th class="number">城市加盟</th>
+                                    <th class="number">城市门店</th>
+                                    <th class="number">旅游线路</th>
+                                    <th class="number">总计</th>
+                                    <th class="number">城市</th>
+                                    <th class="number">高速</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            },
+
+            renderProvinceTrend(type) {
+                const container = document.getElementById('province-trend-content');
+                const filterContainer = document.getElementById('province-filter-container');
+                const trendData = this.provinceData['趋势数据'];
+
+                if (!trendData) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 渲染筛选器
+                if (type === 'penetration') {
+                    filterContainer.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 24px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 14px; color: #4a4a4a; font-weight: 500;">车型类型：</span>
+                                <div style="display: flex; gap: 4px; background: #f8f9fa; padding: 4px; border-radius: 8px;">
+                                    <button class="filter-btn active" data-type="all" onclick="RenderManager.filterProvincePenetration('all')">全部车型</button>
+                                    <button class="filter-btn" data-type="phev" onclick="RenderManager.filterProvincePenetration('phev')">增程</button>
+                                    <button class="filter-btn" data-type="bev" onclick="RenderManager.filterProvincePenetration('bev')">纯电</button>
+                                </div>
+                            </div>
+                            <div id="province-model-selector" style="display: none; align-items: center; gap: 12px;">
+                                <span style="font-size: 14px; color: #4a4a4a; font-weight: 500;">选择车型：</span>
+                                <div id="province-model-tags" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                    <span class="model-tag active" data-model="all" style="padding: 6px 16px; background: #002D28; color: white; border-radius: 16px; font-size: 13px; cursor: pointer;">全部车型</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    // 默认显示全部车型数据
+                    this.renderProvincePenetrationTable(container, '全部车型');
+                } else {
+                    filterContainer.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 14px; color: #4a4a4a; font-weight: 500;">场景筛选：</span>
+                <div style="display: flex; gap: 4px; background: #f8f9fa; padding: 4px; border-radius: 8px;">
+                    <button class="filter-btn active" data-value="全部" onclick="RenderManager.filterProvinceTrend('${type}', '全部')">全部</button>
+                    <button class="filter-btn" data-value="高速" onclick="RenderManager.filterProvinceTrend('${type}', '高速')">高速</button>
+                    <button class="filter-btn" data-value="城市" onclick="RenderManager.filterProvinceTrend('${type}', '城市')">城市</button>
+                </div>
+            </div>
+        `;
+                    this.renderProvinceTrendTable(container, type, '全部');
+                }
+            },
+            renderProvinceTrendTable(container, metric, scene) {
+                const trendData = this.provinceData['趋势数据'];
+                const metricMap = {
+                    'revenue': '充电总收入',
+                    'daily-revenue': '单枪日服务费收入',
+                    'daily-power': '单枪日充电量'
+                };
+
+                const metricData = trendData[metricMap[metric]];
+                if (!metricData) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 创建迷你图表函数
+                const createSparkline = (values) => {
+                    // 过滤掉空值
+                    const validValues = values.filter(v => v !== null && v !== undefined);
+                    if (validValues.length === 0) return '';
+
+                    const width = 80;
+                    const height = 30;
+                    const max = Math.max(...validValues);
+                    const min = Math.min(...validValues);
+                    const range = max - min || 1;
+
+                    const points = validValues.map((value, index) => {
+                        const x = (index / (validValues.length - 1)) * width;
+                        const y = height - ((value - min) / range) * height;
+                        return `${x},${y}`;
+                    }).join(' ');
+
+                    return `
+                        <svg width="${width}" height="${height}" class="sparkline">
+                            <polyline points="${points}" style="fill:none;stroke:#002D28;stroke-width:2" />
+                        </svg>
+                    `;
+                };
+
+                // ✅ 关键修改：首先收集所有出现的月份，确定标准月份列表
+                const allMonths = new Set();
+                Object.values(metricData).forEach(data => {
+                    if (data && data.months) {
+                        data.months.forEach(month => allMonths.add(month));
+                    }
+                });
+
+                // 对月份进行排序（假设格式是 "2月", "3月" 等）
+                const sortedMonths = Array.from(allMonths).sort((a, b) => {
+                    const monthA = parseInt(a.replace('月', ''));
+                    const monthB = parseInt(b.replace('月', ''));
+                    return monthA - monthB;
+                });
+
+                // 筛选符合条件的数据
+                const rows = [];
+                const provinces = new Set();
+
+                Object.entries(metricData).forEach(([key, data]) => {
+                    const [province, dataScene] = key.split('_');
+                    if (dataScene === scene) {
+                        provinces.add(province);
+                    }
+                });
+
+                // 生成表格行
+                Array.from(provinces).sort().forEach(province => {
+                    const key = `${province}_${scene}`;
+                    const data = metricData[key];
+
+                    if (data && data.months && data.values) {
+                        // ✅ 创建对齐的数据数组
+                        const alignedValues = new Array(sortedMonths.length);
+
+                        // 创建月份到值的映射
+                        const monthValueMap = {};
+                        data.months.forEach((month, index) => {
+                            monthValueMap[month] = data.values[index];
+                        });
+
+                        // 填充对齐的数据
+                        sortedMonths.forEach((month, index) => {
+                            alignedValues[index] = monthValueMap[month] !== undefined ? monthValueMap[month] : null;
+                        });
+
+                        const row = `
+                            <tr>
+                                <td>${province}</td>
+                                <td style="text-align: center;">${createSparkline(alignedValues)}</td>
+                                ${alignedValues.map(v =>
+                            `<td class="number">${v !== null && v !== undefined ? this.formatNumber(v) : '--'}</td>`
+                        ).join('')}
+                            </tr>
+                        `;
+                        rows.push(row);
+                    }
+                });
+
+                if (rows.length === 0) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 生成月份表头
+                const monthHeaders = sortedMonths.map(m => `<th class="number">${m}</th>`).join('');
+
+                container.innerHTML = `
+                    <div class="trend-wrapper">
+                        <table class="trend-table">
+                            <thead>
+                                <tr>
+                                    <th>省份</th>
+                                    <th>趋势图</th>
+                                    ${monthHeaders}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows.join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            },
+
+            // 筛选器交互方法
+            filterProvinceTrend(metric, scene) {
+                // 更新按钮状态
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-value') === scene);
+                });
+
+                // 重新渲染表格
+                const container = document.getElementById('province-trend-content');
+                this.renderProvinceTrendTable(container, metric, scene);
+            },
+
+            // 筛选器交互方法
+            filterProvinceTrend(metric, scene) {
+                // 更新按钮状态
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-value') === scene);
+                });
+
+                // 重新渲染表格
+                const container = document.getElementById('province-trend-content');
+                this.renderProvinceTrendTable(container, metric, scene);
+            },
+
+            filterProvincePenetration(type) {
+                // 更新按钮状态
+                document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-type') === type);
+                });
+
+                const modelSelector = document.getElementById('province-model-selector');
+                const container = document.getElementById('province-trend-content');
+
+                if (type === 'all') {
+                    // 选择全部车型时，隐藏车型选择器
+                    modelSelector.style.display = 'none';
+                    // 直接显示全部车型数据
+                    this.renderProvincePenetrationTable(container, '全部车型');
+                } else {
+                    // 选择增程或纯电时，显示车型选择器
+                    modelSelector.style.display = 'flex';
+                    // 更新车型标签
+                    this.updateModelTags('province', type);
+
+                    // ✅ 关键修改：添加延迟确保DOM更新完成
+                    setTimeout(() => {
+                        // 默认显示"整体"数据
+                        this.renderProvincePenetrationTable(container, 'all');
+                    }, 10);
+                }
+            },
+
+            updateModelTags(scope, type) {
+                const container = document.getElementById(`${scope}-model-tags`);
+                const models = type === 'phev' ? ['L6', 'L7', 'L8', 'L9', 'ONE'] : ['MEGA', 'i8', 'i6'];
+
+                // ✅ 修改：根据类型显示不同的文本
+                const allModelText = type === 'phev' ? '增程整体' : '纯电整体';
+
+                container.innerHTML = `
+                    <span class="model-tag active" data-model="all" 
+                        style="padding: 6px 16px; background: #002D28; color: white; border-radius: 16px; font-size: 13px; cursor: pointer;"
+                        onclick="RenderManager.selectModel('${scope}', 'all')">
+                        ${allModelText}
+                    </span>
+                    ${models.map(model => `
+                        <span class="model-tag" data-model="${model}" 
+                            style="padding: 6px 16px; background: #f0f0f0; color: #666; border-radius: 16px; font-size: 13px; cursor: pointer;"
+                            onclick="RenderManager.selectModel('${scope}', '${model}')">
+                            ${model}
+                        </span>
+                    `).join('')}
+                `;
+            },
+
+            selectModel(scope, model) {
+                // 更新标签状态
+                document.querySelectorAll(`#${scope}-model-tags .model-tag`).forEach(tag => {
+                    const isActive = tag.getAttribute('data-model') === model;
+                    tag.classList.toggle('active', isActive);
+                    tag.style.background = isActive ? '#002D28' : '#f0f0f0';
+                    tag.style.color = isActive ? 'white' : '#666';
+                });
+
+                // 重新渲染数据
+                const container = document.getElementById(`${scope}-trend-content`);
+
+                if (scope === 'province') {
+                    // ✅ 关键：获取当前的车型类型按钮状态
+                    const activeTypeBtn = document.querySelector('#province-filter-container .filter-btn[data-type].active');
+                    const currentType = activeTypeBtn ? activeTypeBtn.getAttribute('data-type') : 'all';
+
+                    console.log('selectModel - scope:', scope, 'model:', model, 'currentType:', currentType);
+
+                    // 直接传递model参数，让renderProvincePenetrationTable内部处理
+                    this.renderProvincePenetrationTable(container, model);
+                } else if (scope === 'city') {
+                    // ✅ 城市也需要同样的处理
+                    const activeTypeBtn = document.querySelector('#city-filter-container .filter-btn[data-type].active');
+                    const currentType = activeTypeBtn ? activeTypeBtn.getAttribute('data-type') : 'all';
+
+                    console.log('selectModel - scope:', scope, 'model:', model, 'currentType:', currentType);
+
+                    // 直接传递model参数
+                    this.renderCityPenetrationTable(container, model);
+                }
+            },
+
+            renderProvincePenetrationTable(container, model) {
+                const trendData = this.provinceData['趋势数据'];
+                const penetrationData = trendData['车主公充渗透率'];
+
+                if (!penetrationData) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 创建迷你图表（复用之前的函数）
+                const createSparkline = (values) => {
+                    if (!values || values.length === 0) return '';
+
+                    // 如果数据点太少，不显示图表
+                    if (values.length < 2) {
+                        return '<span style="color: #999; font-size: 12px;">数据不足</span>';
+                    }
+
+                    const width = 80;
+                    const height = 30;
+                    const max = Math.max(...values);
+                    const min = Math.min(...values);
+                    const range = max - min || 1;
+
+                    const points = values.map((value, index) => {
+                        const x = (index / (values.length - 1)) * width;
+                        const y = height - ((value - min) / range) * height;
+                        return `${x},${y}`;
+                    }).join(' ');
+
+                    return `
+            <svg width="${width}" height="${height}" class="sparkline">
+                <polyline points="${points}" style="fill:none;stroke:#002D28;stroke-width:2" />
+            </svg>
+        `;
+                };
+
+                // ✅ 关键修改：首先收集所有出现的月份
+                const allMonths = new Set();
+                const activeTypeBtn = document.querySelector('#province-filter-container .filter-btn[data-type].active');
+                const currentType = activeTypeBtn ? activeTypeBtn.getAttribute('data-type') : 'all';
+
+                // 根据选择的车型筛选相关数据并收集月份
+                Object.entries(penetrationData).forEach(([key, data]) => {
+                    const [province, dataModel] = key.split('_');
+
+                    let shouldInclude = false;
+                    if (model === '全部车型' && dataModel === '全部车型') {
+                        shouldInclude = true;
+                    } else if (model === 'all') {
+                        if (currentType === 'phev' && dataModel === '增程整体') {
+                            shouldInclude = true;
+                        } else if (currentType === 'bev' && dataModel === '纯电整体') {
+                            shouldInclude = true;
+                        }
+                    } else if (dataModel === model) {
+                        shouldInclude = true;
+                    }
+
+                    if (shouldInclude && data && data.months) {
+                        data.months.forEach(month => allMonths.add(month));
+                    }
+                });
+
+                // 对月份进行排序
+                const sortedMonths = Array.from(allMonths).sort((a, b) => {
+                    const monthA = parseInt(a.replace('月', ''));
+                    const monthB = parseInt(b.replace('月', ''));
+                    return monthA - monthB;
+                });
+
+                // 筛选数据
+                const rows = [];
+                const provinces = new Set();
+
+                // 根据选择的车型筛选数据
+                Object.entries(penetrationData).forEach(([key, data]) => {
+                    const [province, dataModel] = key.split('_');
+
+                    if (model === '全部车型') {
+                        if (dataModel === '全部车型') {
+                            provinces.add(province);
+                        }
+                    } else if (model === 'all') {
+                        if (currentType === 'phev' && dataModel === '增程整体') {
+                            provinces.add(province);
+                        } else if (currentType === 'bev' && dataModel === '纯电整体') {
+                            provinces.add(province);
+                        }
+                    } else {
+                        if (dataModel === model) {
+                            provinces.add(province);
+                        }
+                    }
+                });
+
+                // 生成表格行
+                Array.from(provinces).sort().forEach(province => {
+                    let key;
+                    if (model === '全部车型') {
+                        key = `${province}_全部车型`;
+                    } else if (model === 'all') {
+                        if (currentType === 'phev') {
+                            key = `${province}_增程整体`;
+                        } else if (currentType === 'bev') {
+                            key = `${province}_纯电整体`;
+                        }
+                    } else {
+                        key = `${province}_${model}`;
+                    }
+
+                    const data = penetrationData[key];
+
+                    if (data && data.months && data.values) {
+                        // ✅ 创建对齐的数据数组
+                        const alignedValues = new Array(sortedMonths.length);
+
+                        // 创建月份到值的映射
+                        const monthValueMap = {};
+                        data.months.forEach((month, index) => {
+                            monthValueMap[month] = data.values[index];
+                        });
+
+                        // 填充对齐的数据
+                        sortedMonths.forEach((month, index) => {
+                            alignedValues[index] = monthValueMap[month] !== undefined ? monthValueMap[month] : null;
+                        });
+
+                        const row = `
+                <tr>
+                    <td>${province}</td>
+                    <td style="text-align: center;">${createSparkline(alignedValues)}</td>
+                    ${alignedValues.map(v =>
+                            `<td class="number">${v !== null && v !== undefined ? v + '%' : '--'}</td>`
+                        ).join('')}
+                </tr>
+            `;
+                        rows.push(row);
+                    }
+                });
+
+                if (rows.length === 0) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 生成月份表头
+                const monthHeaders = sortedMonths.map(m => `<th class="number">${m}</th>`).join('');
+
+                container.innerHTML = `
+        <div class="trend-wrapper">
+            <table class="trend-table">
+                <thead>
+                    <tr>
+                        <th>省份</th>
+                        <th>趋势图</th>
+                        ${monthHeaders}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+            },
+            renderCity() {
+                const container = document.getElementById('city-detail-contents');
+                const cityData = dashboardData['城市指标'];
+
+                if (!cityData) {
+                    container.innerHTML = '<div class="card">暂无数据</div>';
+                    return;
+                }
+
+                // 获取TOP20城市列表
+                const top20Cities = cityData['TOP20城市'] || [];
+
+                container.innerHTML = `
+        <div class="card">
+            <h2 class="card-title">TOP20城市核心指标汇总</h2>
+            <div class="metric-tabs">
+                <button class="metric-tab active" data-city-summary="yearly">年度合计</button>
+                <button class="metric-tab" data-city-summary="lastweek">上周表现</button>
+            </div>
+            <div id="city-summary-content"></div>
+        </div>
+        <div class="card">
+            <h2 class="card-title">核心指标25年by月趋势</h2>
+            <div class="metric-tabs">
+                <button class="metric-tab active" data-city-trend-type="revenue">充电总收入</button>
+                <button class="metric-tab" data-city-trend-type="daily-revenue">单枪日服务费收入</button>
+                <button class="metric-tab" data-city-trend-type="daily-power">单枪日充电量</button>
+                <button class="metric-tab" data-city-trend-type="penetration">车主公充渗透率</button>
+            </div>
+            <div class="filter-container" id="city-filter-container"></div>
+            <div id="city-trend-content"></div>
+        </div>
+    `;
+
+                // 存储数据供后续使用
+                this.cityData = cityData;
+
+                // 初始渲染
+                this.renderCitySummary('yearly');
+                this.renderCityTrend('revenue');
+            },
+            renderCitySummary(type) {
+                const container = document.getElementById('city-summary-content');
+                const data = this.cityData;
+
+                if (!data) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                if (type === 'yearly') {
+                    this.renderCityYearly(container, data['年度合计']);
+                } else {
+                    this.renderCityLastweek(container, data['上周表现']);
+                }
+            },
+
+            renderCityYearly(container, yearlyData) {
+                if (!yearlyData || Object.keys(yearlyData).length === 0) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 按照固定顺序显示城市
+                const cityOrder = ['苏州', '无锡', '南京', '武汉', '合肥', '上海', '杭州',
+                    '宁波', '金华', '福州', '长沙', '厦门', '深圳', '广州',
+                    '成都', '西安', '北京', '济南', '青岛', '郑州', '重庆'];
+
+                const rows = cityOrder.map(city => {
+                    const data = yearlyData[city] || {};
+                    return `
+            <tr>
+                <td>${city}</td>
+                <td class="number">${data['车主保有量'] ? this.formatNumber(data['车主保有量']) : '--'}</td>
+                <td class="number">${data['车主保有量%'] || '0.0'}%</td>
+                <td class="number">${data['累计自建场站数'] ? this.formatNumber(data['累计自建场站数']) : '--'}</td>
+                <td class="number">${data['累计自建场站数%'] || '0.0'}%</td>
+                <td class="number">${data['最近30天充电车主数'] ? this.formatNumber(data['最近30天充电车主数']) : '--'}</td>
+                <td class="number">${data['最近30天充电车主数%'] || '0.0'}%</td>
+                <td class="number">${data['最近30天充电收入'] ? this.formatNumber(data['最近30天充电收入']) : '--'}</td>
+                <td class="number">${data['最近30天充电收入%'] || '0.0'}%</td>
+            </tr>
+        `;
+                }).join('');
+
+                container.innerHTML = `
+        <div class="city-yearly-wrapper">
+            <table class="city-yearly-table">
+                <thead>
+                    <tr>
+                        <th>城市</th>
+                        <th class="number">车主保有量</th>
+                        <th class="number">车主保有量内占%</th>
+                        <th class="number">累计自建场站数</th>
+                        <th class="number">自建场站数内占%</th>
+                        <th class="number">最近30天充电车主数</th>
+                        <th class="number">近30天充电车主数内占%</th>
+                        <th class="number">最近30天充电收入</th>
+                        <th class="number">近30天充电收入内占%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </div>
+    `;
+            },
+            renderCityLastweek(container, weeklyData) {
+                if (!weeklyData || Object.keys(weeklyData).length === 0) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                const rows = Object.entries(weeklyData).map(([city, data]) => `
+        <tr>
+            <td>${city}</td>
+            <!-- 单枪日服务费收入 -->
+            <td class="number">${this.formatNumber(data['单枪日收入_总计'], 1)}</td>
+            <td class="number">${this.formatNumber(data['单枪日收入_高速线上'], 1)}</td>
+            <td class="number">${this.formatNumber(data['单枪日收入_高速线下'], 1)}</td>
+            <td class="number">${this.formatNumber(data['单枪日收入_城市自建'], 1)}</td>
+            <td class="number">${this.formatNumber(data['单枪日收入_城市加盟'], 1)}</td>
+            <td class="number">${this.formatNumber(data['单枪日收入_城市门店'], 1)}</td>
+            <td class="number">${this.formatNumber(data['单枪日收入_旅游线路'], 1)}</td>
+            <!-- 单枪日电量 -->
+            <td class="number">${this.formatNumber(data['单枪日电量_总计'],)}</td>
+            <td class="number">${this.formatNumber(data['单枪日电量_高速线上'])}</td>
+            <td class="number">${this.formatNumber(data['单枪日电量_高速线下'])}</td>
+            <td class="number">${this.formatNumber(data['单枪日电量_城市自建'])}</td>
+            <td class="number">${this.formatNumber(data['单枪日电量_城市加盟'])}</td>
+            <td class="number">${this.formatNumber(data['单枪日电量_城市门店'])}</td>
+            <td class="number">${this.formatNumber(data['单枪日电量_旅游线路'])}</td>
+            <!-- 车主公充渗透率 -->
+            <td class="number">${data['渗透率_总计']}%</td>
+            <td class="number">${data['渗透率_城市']}%</td>
+            <td class="number">${data['渗透率_高速']}%</td>
+        </tr>
+    `).join('');
+
+                container.innerHTML = `
+        <div class="city-weekly-wrapper">
+            <table class="city-weekly-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">城市</th>
+                        <th colspan="7" style="text-align: center;">单枪日服务费收入(元)</th>
+                        <th colspan="7" style="text-align: center;">单枪日电量(度)</th>
+                        <th colspan="3" style="text-align: center;">车主公充渗透率(%)</th>
+                    </tr>
+                    <tr>
+                        <th class="number">总计</th>
+                        <th class="number">高速线上</th>
+                        <th class="number">高速线下</th>
+                        <th class="number">城市自建</th>
+                        <th class="number">城市加盟</th>
+                        <th class="number">城市门店</th>
+                        <th class="number">旅游线路</th>
+                        <th class="number">总计</th>
+                        <th class="number">高速线上</th>
+                        <th class="number">高速线下</th>
+                        <th class="number">城市自建</th>
+                        <th class="number">城市加盟</th>
+                        <th class="number">城市门店</th>
+                        <th class="number">旅游线路</th>
+                        <th class="number">总计</th>
+                        <th class="number">城市</th>
+                        <th class="number">高速</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </div>
+    `;
+            },
+            renderCityTrend(type) {
+                const container = document.getElementById('city-trend-content');
+                const filterContainer = document.getElementById('city-filter-container');
+                const trendData = this.cityData['趋势数据'];
+
+                if (!trendData) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 渲染筛选器
+                if (type === 'penetration') {
+                    filterContainer.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 24px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 14px; color: #4a4a4a; font-weight: 500;">车型类型：</span>
+                                <div style="display: flex; gap: 4px; background: #f8f9fa; padding: 4px; border-radius: 8px;">
+                                    <button class="filter-btn active" data-type="all" onclick="RenderManager.filterCityPenetration('all')">全部车型</button>
+                                    <button class="filter-btn" data-type="phev" onclick="RenderManager.filterCityPenetration('phev')">增程</button>
+                                    <button class="filter-btn" data-type="bev" onclick="RenderManager.filterCityPenetration('bev')">纯电</button>
+                                </div>
+                            </div>
+                            <div id="city-model-selector" style="display: none; align-items: center; gap: 12px;">
+                                <span style="font-size: 14px; color: #4a4a4a; font-weight: 500;">选择车型：</span>
+                                <div id="city-model-tags" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                    <span class="model-tag active" data-model="all" style="padding: 6px 16px; background: #002D28; color: white; border-radius: 16px; font-size: 13px; cursor: pointer;">全部车型</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    // 默认显示全部车型数据
+                    this.renderCityPenetrationTable(container, '全部车型');
+                } else {
+                    filterContainer.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 14px; color: #4a4a4a; font-weight: 500;">场景筛选：</span>
+                <div style="display: flex; gap: 4px; background: #f8f9fa; padding: 4px; border-radius: 8px;">
+                    <button class="filter-btn active" data-value="全部" onclick="RenderManager.filterCityTrend('${type}', '全部')">全部</button>
+                    <button class="filter-btn" data-value="高速" onclick="RenderManager.filterCityTrend('${type}', '高速')">高速</button>
+                    <button class="filter-btn" data-value="城市" onclick="RenderManager.filterCityTrend('${type}', '城市')">城市</button>
+                </div>
+            </div>
+        `;
+                    this.renderCityTrendTable(container, type, '全部');
+                }
+            },
+            renderCityTrendTable(container, metric, scene) {
+                const trendData = this.cityData['趋势数据'];
+                const metricMap = {
+                    'revenue': '充电总收入',
+                    'daily-revenue': '单枪日服务费收入',
+                    'daily-power': '单枪日充电量'
+                };
+
+                const metricData = trendData[metricMap[metric]];
+                if (!metricData) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 创建迷你图表
+                const createSparkline = (values) => {
+                    // 过滤掉空值
+                    const validValues = values.filter(v => v !== null && v !== undefined);
+                    if (validValues.length === 0) return '';
+
+                    if (validValues.length < 2) {
+                        return '<span style="color: #999; font-size: 12px;">数据不足</span>';
+                    }
+
+                    const width = 80;
+                    const height = 30;
+                    const max = Math.max(...validValues);
+                    const min = Math.min(...validValues);
+                    const range = max - min || 1;
+
+                    const points = validValues.map((value, index) => {
+                        const x = (index / (validValues.length - 1)) * width;
+                        const y = height - ((value - min) / range) * height;
+                        return `${x},${y}`;
+                    }).join(' ');
+
+                    return `
+            <svg width="${width}" height="${height}" class="sparkline">
+                <polyline points="${points}" style="fill:none;stroke:#002D28;stroke-width:2" />
+            </svg>
+        `;
+                };
+
+                // ✅ 关键修改：首先收集所有出现的月份
+                const allMonths = new Set();
+                Object.entries(metricData).forEach(([key, data]) => {
+                    const [city, dataScene] = key.split('_');
+                    if (dataScene === scene && data && data.months) {
+                        data.months.forEach(month => allMonths.add(month));
+                    }
+                });
+
+                // 对月份进行排序
+                const sortedMonths = Array.from(allMonths).sort((a, b) => {
+                    const monthA = parseInt(a.replace('月', ''));
+                    const monthB = parseInt(b.replace('月', ''));
+                    return monthA - monthB;
+                });
+
+                // 筛选符合条件的城市数据
+                const rows = [];
+                const cities = new Set();
+
+                Object.entries(metricData).forEach(([key, data]) => {
+                    const [city, dataScene] = key.split('_');
+                    if (dataScene === scene) {
+                        cities.add(city);
+                    }
+                });
+
+                // 生成表格行
+                Array.from(cities).sort().forEach(city => {
+                    const key = `${city}_${scene}`;
+                    const data = metricData[key];
+
+                    if (data && data.months && data.values) {
+                        // ✅ 创建对齐的数据数组
+                        const alignedValues = new Array(sortedMonths.length);
+
+                        // 创建月份到值的映射
+                        const monthValueMap = {};
+                        data.months.forEach((month, index) => {
+                            monthValueMap[month] = data.values[index];
+                        });
+
+                        // 填充对齐的数据
+                        sortedMonths.forEach((month, index) => {
+                            alignedValues[index] = monthValueMap[month] !== undefined ? monthValueMap[month] : null;
+                        });
+
+                        const row = `
+                <tr>
+                    <td>${city}</td>
+                    <td style="text-align: center;">${createSparkline(alignedValues)}</td>
+                    ${alignedValues.map(v =>
+                            `<td class="number">${v !== null && v !== undefined ? this.formatNumber(v) : '--'}</td>`
+                        ).join('')}
+                </tr>
+            `;
+                        rows.push(row);
+                    }
+                });
+
+                if (rows.length === 0) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 生成月份表头
+                const monthHeaders = sortedMonths.map(m => `<th class="number">${m}</th>`).join('');
+
+                container.innerHTML = `
+        <div class="trend-wrapper">
+            <table class="trend-table">
+                <thead>
+                    <tr>
+                        <th>城市</th>
+                        <th>趋势图</th>
+                        ${monthHeaders}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+            },
+
+            renderCityPenetrationTable(container, model) {
+                const trendData = this.cityData['趋势数据'];
+                const penetrationData = trendData['车主公充渗透率'];
+
+                if (!penetrationData) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 创建迷你图表（复用之前的函数）
+                const createSparkline = (values) => {
+                    if (!values || values.length === 0) return '';
+
+                    if (values.length < 2) {
+                        return '<span style="color: #999; font-size: 12px;">数据不足</span>';
+                    }
+
+                    const width = 80;
+                    const height = 30;
+                    const max = Math.max(...values);
+                    const min = Math.min(...values);
+                    const range = max - min || 1;
+
+                    const points = values.map((value, index) => {
+                        const x = (index / (values.length - 1)) * width;
+                        const y = height - ((value - min) / range) * height;
+                        return `${x},${y}`;
+                    }).join(' ');
+
+                    return `
+                        <svg width="${width}" height="${height}" class="sparkline">
+                            <polyline points="${points}" style="fill:none;stroke:#002D28;stroke-width:2" />
+                        </svg>
+                    `;
+                };
+
+                const allMonths = new Set();
+                const activeTypeBtn = document.querySelector('#city-filter-container .filter-btn[data-type].active');
+                const currentType = activeTypeBtn ? activeTypeBtn.getAttribute('data-type') : 'all';
+
+                // 确定要查找的数据后缀
+                let dataSuffix;
+                if (currentType === 'all' || model === '全部车型') {
+                    dataSuffix = '全部车型';
+                } else if (currentType === 'phev' && model === 'all') {
+                    dataSuffix = '增程整体';
+                } else if (currentType === 'bev' && model === 'all') {
+                    dataSuffix = '纯电整体';
+                } else {
+                    dataSuffix = model;
+                }
+
+                // 收集所有相关数据的月份
+                Object.entries(penetrationData).forEach(([key, data]) => {
+                    if (key.endsWith(`_${dataSuffix}`) && data && data.months) {
+                        data.months.forEach(month => allMonths.add(month));
+                    }
+                });
+
+                // 对月份进行排序
+                const sortedMonths = Array.from(allMonths).sort((a, b) => {
+                    const monthA = parseInt(a.replace('月', ''));
+                    const monthB = parseInt(b.replace('月', ''));
+                    return monthA - monthB;
+                });
+
+                // 筛选符合条件的城市
+                const rows = [];
+                const cities = new Set();
+
+                Object.entries(penetrationData).forEach(([key, data]) => {
+                    if (key.endsWith(`_${dataSuffix}`)) {
+                        const city = key.replace(`_${dataSuffix}`, '');
+                        cities.add(city);
+                    }
+                });
+
+                // 生成表格行
+                Array.from(cities).forEach(city => {
+                    const key = `${city}_${dataSuffix}`;
+                    const data = penetrationData[key];
+
+                    if (data && data.months && data.values) {
+                        // ✅ 创建对齐的数据数组
+                        const alignedValues = new Array(sortedMonths.length);
+
+                        // 创建月份到值的映射
+                        const monthValueMap = {};
+                        data.months.forEach((month, index) => {
+                            monthValueMap[month] = data.values[index];
+                        });
+
+                        // 填充对齐的数据
+                        sortedMonths.forEach((month, index) => {
+                            alignedValues[index] = monthValueMap[month] !== undefined ? monthValueMap[month] : null;
+                        });
+
+                        const row = `
+                <tr>
+                    <td>${city}</td>
+                    <td style="text-align: center;">${createSparkline(alignedValues)}</td>
+                    ${alignedValues.map(v =>
+                            `<td class="number">${v !== null && v !== undefined ? v + '%' : '--'}</td>`
+                        ).join('')}
+                </tr>
+            `;
+                        rows.push(row);
+                    }
+                });
+
+                if (rows.length === 0) {
+                    container.innerHTML = '<div>暂无数据</div>';
+                    return;
+                }
+
+                // 生成月份表头
+                const monthHeaders = sortedMonths.map(m => `<th class="number">${m}</th>`).join('');
+
+                container.innerHTML = `
+        <div class="trend-wrapper">
+            <table class="trend-table">
+                <thead>
+                    <tr>
+                        <th>城市</th>
+                        <th>趋势图</th>
+                        ${monthHeaders}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+            },
+
+            // 筛选器交互方法
+            filterCityTrend(metric, scene) {
+                // 更新按钮状态
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-value') === scene);
+                });
+
+                // 重新渲染表格
+                const container = document.getElementById('city-trend-content');
+                this.renderCityTrendTable(container, metric, scene);
+            },
+
+            filterCityPenetration(type) {
+                // 更新按钮状态
+                document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-type') === type);
+                });
+
+                // 更新车型标签
+                this.updateModelTags('city', type);
+
+                // 默认选择全部车型
+                this.selectModel('city', 'all');
+            },
+
+            // 筛选器交互方法
+            filterCityTrend(metric, scene) {
+                // 更新按钮状态
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-value') === scene);
+                });
+
+                // 重新渲染表格
+                const container = document.getElementById('city-trend-content');
+                this.renderCityTrendTable(container, metric, scene);
+            },
+
+            filterCityPenetration(type) {
+                // 更新按钮状态
+                document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-type') === type);
+                });
+
+                const modelSelector = document.getElementById('city-model-selector');
+                const container = document.getElementById('city-trend-content');
+
+                if (type === 'all') {
+                    // 选择全部车型时，隐藏车型选择器
+                    modelSelector.style.display = 'none';
+                    // 直接显示全部车型数据
+                    this.renderCityPenetrationTable(container, '全部车型');
+                } else {
+                    // 选择增程或纯电时，显示车型选择器
+                    modelSelector.style.display = 'flex';
+                    // 更新车型标签
+                    this.updateModelTags('city', type);
+
+                    // ✅ 关键修改：添加延迟确保DOM更新完成
+                    setTimeout(() => {
+                        // 默认显示"整体"数据
+                        this.renderCityPenetrationTable(container, 'all');
+                    }, 10);
+                }
+            },
+            renderTrendTable(container, scope, type) {
+                const trendData = dashboardData['趋势数据'];
+                if (!trendData) return;
+
+                const metricData = trendData[this.getTrendMetricKey(type)];
+                if (!metricData) return;
+
+                // 创建迷你图表
+                const createSparkline = (values) => {
+                    const width = 80;
+                    const height = 30;
+                    const max = Math.max(...values);
+                    const min = Math.min(...values);
+                    const range = max - min || 1;
+
+                    const points = values.map((value, index) => {
+                        const x = (index / (values.length - 1)) * width;
+                        const y = height - ((value - min) / range) * height;
+                        return `${x},${y}`;
+                    }).join(' ');
+
+                    return `
+                        <svg width="${width}" height="${height}" class="sparkline">
+                            <polyline points="${points}" style="fill:none;stroke:#002D28;stroke-width:2" />
+                        </svg>
+                    `;
+                };
+
+                // 根据scope生成表格行
+                const rows = [];
+                Object.keys(metricData).forEach(key => {
+                    const data = metricData[key];
+                    if (data && data.months && data.values) {
+                        rows.push({
+                            name: key,
+                            sparkline: createSparkline(data.values),
+                            values: data.values,
+                            months: data.months
+                        });
+                    }
+                });
+
+                if (rows.length === 0) return;
+
+                container.innerHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>${scope === 'province' ? '省份' : '城市'}</th>
+                                <th>趋势图</th>
+                                ${rows[0].months.map(m => `<th class="number">${m}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.map(row => `
+                                <tr>
+                                    <td>${row.name}</td>
+                                    <td style="text-align: center;">${row.sparkline}</td>
+                                    ${row.values.map(v => `<td class="number">${this.formatNumber(v, 1)}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            },
+
+            handleProvinceTabs(tab) {
+                const summaryType = tab.getAttribute('data-province-summary');
+                const trendType = tab.getAttribute('data-province-trend');
+
+                if (summaryType) {
+                    this.renderProvinceSummary(summaryType);
+                } else if (trendType) {
+                    this.renderProvinceTrend(trendType);
+                }
+            },
+
+            handleCityTabs(tab) {
+                const summaryType = tab.getAttribute('data-city-summary');
+                const trendType = tab.getAttribute('data-city-trend-type');
+
+                if (summaryType) {
+                    this.renderCitySummary(summaryType);
+                } else if (trendType) {
+                    this.renderCityTrend(trendType);
+                }
+            },
+
+            // 工具方法
+            formatNumber(value, decimals = 0) {
+                if (value === null || value === undefined || value === '') return '--';
+
+                const num = parseFloat(value);
+                if (isNaN(num)) return '--';
+
+                if (decimals > 0) {
+                    return num.toLocaleString('zh-CN', {
+                        minimumFractionDigits: decimals,
+                        maximumFractionDigits: decimals
+                    });
+                }
+
+                return Math.round(num).toLocaleString('zh-CN');
+            },
+
+            getTarget(metric, dimension) {
+                const targets = dashboardData['目标'];
+                if (!targets || !targets[metric]) return null;
+
+                // 根据当前时期（H1/H2）获取对应目标
+                const currentPeriod = this.getCurrentPeriod();
+
+                // 如果目标数据有H1/H2区分
+                if (targets[metric][currentPeriod]) {
+                    return targets[metric][currentPeriod][dimension];
+                }
+
+                // 否则直接返回
+                return targets[metric][dimension];
+            },
+
+
+            calculateProgress(actual, target, timeProgress = null, metric = null, category = null) {
+                if (!target || target === 0) return { value: '--', class: '' };
+
+                const actualNum = parseFloat(actual);
+                const targetNum = parseFloat(target);
+
+                if (isNaN(actualNum) || isNaN(targetNum)) return { value: '--', class: '' };
+
+                let progress;
+
+                // 检查是否是站桩数指标
+                if (metric === '充电网络站桩数' && YEAR_START_VALUES[category] !== undefined) {
+                    // 站桩数使用特殊计算公式
+                    const yearStartValue = YEAR_START_VALUES[category];
+                    const currentIncrease = actualNum - yearStartValue;
+                    const targetIncrease = targetNum - yearStartValue;
+
+                    if (targetIncrease > 0) {
+                        progress = Math.round((currentIncrease / targetIncrease) * 100);
+                    } else {
+                        progress = currentIncrease > 0 ? 100 : 0;
+                    }
+                } else {
+                    // 其他指标使用普通公式
+                    progress = Math.round((actualNum / targetNum) * 100);
+                }
+
+                // 进度状态判断
+                let className = '';
+                if (timeProgress !== null) {
+                    const time = parseFloat(timeProgress);
+                    if (progress > time + 5) {
+                        className = 'success';
+                    } else if (progress >= time - 5 && progress <= time + 5) {
+                        className = 'warning';
+                    } else {
+                        className = 'danger';
+                    }
+                } else {
+                    if (progress >= 95) className = 'success';
+                    else if (progress >= 80) className = 'warning';
+                    else className = 'danger';
+                }
+
+                return { value: progress, class: className };
+            },
+            mapSubType(subType) {
+                if (subType === '自营' || subType === '自建') return '城市自建';
+                if (subType === '加盟') return '城市加盟';
+                if (subType === '门店') return '城市门店';
+                return null;
+            },
+
+            getTrendMetricKey(type) {
+                const mapping = {
+                    'revenue': '充电网络收入',
+                    'daily-revenue': '单枪日服务费收入',
+                    'daily-power': '单枪日电量',
+                    'penetration': '理想车主公充电量渗透率'
+                };
+                return mapping[type];
+            }
+        };
+        function showTrendModal(metric, category) {
+            const modal = document.getElementById('trendModal');
+            const title = document.getElementById('trendModalTitle');
+            title.textContent = `${metric} - ${category} 年初至今趋势`;
+
+            modal.style.display = 'flex';
+
+            if (!trendChart) {
+                trendChart = echarts.init(document.getElementById('trendChart'));
+            }
+
+            // 获取趋势数据
+            const trendData = dashboardData['趋势数据'];
+
+            if (!trendData || !trendData[metric]) {
+                console.error('趋势数据不存在');
+                return;
+            }
+
+            // 根据点击的按钮确定需要显示的线条
+            let linesToShow = [];
+
+            if (category === '全国整体') {
+                linesToShow = ['全国整体', '城市整体', '高速整体', '旅游线路'];
+            } else if (category === '城市整体') {
+                linesToShow = ['城市整体', '城市自营', '城市加盟', '城市门店'];
+            } else if (category === '高速整体') {
+                linesToShow = ['高速整体', '高速线上', '高速线下'];
+            } else {
+                linesToShow = [category];
+            }
+
+            // 准备图表数据
+            const legendData = [];
+            const series = [];
+            let maxMonths = []; // 改为取最长的月份数组
+            const colors = ['#002D28', '#CEA472', '#52c41a', '#1890ff', '#722ed1', '#fa541c'];
+
+            // 首先找出最长的月份数组
+            linesToShow.forEach((line) => {
+                const lineData = trendData[metric][line];
+                if (lineData && lineData.months && lineData.months.length > maxMonths.length) {
+                    maxMonths = lineData.months;
+                }
+            });
+
+            // 然后处理每条线的数据
+            linesToShow.forEach((line, index) => {
+                const lineData = trendData[metric][line];
+
+                if (lineData && lineData.months && lineData.values) {
+                    legendData.push(line);
+
+                    // 创建与最长月份数组对齐的数据
+                    const alignedData = [];
+                    maxMonths.forEach((month, monthIndex) => {
+                        const dataIndex = lineData.months.indexOf(month);
+                        if (dataIndex !== -1) {
+                            alignedData.push(lineData.values[dataIndex]);
+                        } else {
+                            // 如果该月份没有数据，设为null（在图表上会显示为断点）
+                            alignedData.push(null);
+                        }
+                    });
+
+                    series.push({
+                        name: line,
+                        type: 'line',
+                        data: alignedData,
+                        smooth: true,
+                        connectNulls: false, // 不连接空值点
+                        itemStyle: {
+                            color: colors[index % colors.length]
+                        },
+                        lineStyle: {
+                            width: 3
+                        },
+                        label: {
+                            show: false
+                        },
+                        emphasis: {
+                            focus: 'series',
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: function (params) {
+                                    return params.value !== null ? RenderManager.formatNumber(params.value, 0) : '';
+                                }
+                            }
+                        },
+                        symbolSize: 8
+                    });
+                }
+            });
+
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        let result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            if (item.value !== null) {
+                                result += `${item.marker} ${item.seriesName}: ${RenderManager.formatNumber(item.value, 0)}<br/>`;
+                            }
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: legendData,
+                    top: 20,
+                    selected: {}
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: maxMonths, // 使用最长的月份数组
+                    axisLabel: {
+                        color: '#666'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#666',
+                        formatter: function (value) {
+                            return RenderManager.formatNumber(value, 0);
+                        }
+                    }
+                },
+                series: series
+            };
+
+            trendChart.setOption(option, true);
+
+            setTimeout(() => {
+                trendChart.resize();
+            }, 100);
+        }
+        // 改进的渗透率趋势展示函数
+        function showPenetrationTrend(type) {
+            const modal = document.getElementById('trendModal');
+            const title = document.getElementById('trendModalTitle');
+
+            modal.style.display = 'flex';
+
+            if (!trendChart) {
+                trendChart = echarts.init(document.getElementById('trendChart'));
+            }
+
+            // 获取趋势数据
+            const trendData = dashboardData['趋势数据'];
+            if (!trendData || !trendData['理想车主公充电量渗透率']) {
+                console.error('渗透率趋势数据不存在');
+                return;
+            }
+
+            const penetrationData = trendData['理想车主公充电量渗透率'];
+
+            // 根据类型确定需要显示的线条
+            let linesToShow = [];
+            let titleText = '';
+
+            if (type === 'all') {
+                titleText = '全部车型渗透率趋势';
+                // 显示所有车型
+                linesToShow = ['全部车型整体', '增程整体', '纯电整体', 'L6', 'L7', 'L8', 'L9', 'ONE', 'MEGA', 'i8', 'i6'];
+            } else if (type === 'phev') {
+                titleText = '增程车型渗透率趋势';
+                linesToShow = ['增程整体', 'L6', 'L7', 'L8', 'L9', 'ONE'];
+            } else if (type === 'bev') {
+                titleText = '纯电车型渗透率趋势';
+                linesToShow = ['纯电整体', 'MEGA', 'i8', 'i6'];
+            }
+
+            title.textContent = titleText;
+
+            // 准备图表数据
+            const legendData = [];
+            const series = [];
+            let months = [];
+            const colors = ['#002D28', '#CEA472', '#52c41a', '#1890ff', '#722ed1', '#fa541c', '#faad14', '#13c2c2', '#eb2f96'];
+
+            linesToShow.forEach((model, index) => {
+                const modelData = penetrationData[model];
+                if (modelData && modelData.months && modelData.values) {
+                    legendData.push(model);
+                    months = modelData.months;
+
+                    series.push({
+                        name: model,
+                        type: 'line',
+                        data: modelData.values,
+                        smooth: true,
+                        itemStyle: {
+                            color: colors[index % colors.length]
+                        },
+                        lineStyle: {
+                            width: model.includes('整体') ? 4 : 2 // 整体线条加粗
+                        },
+                        emphasis: {
+                            focus: 'series',
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: function (params) {
+                                    return params.value + '%';
+                                }
+                            }
+                        },
+                        symbolSize: model.includes('整体') ? 10 : 6
+                    });
+                }
+            });
+
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        let result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            result += `${item.marker} ${item.seriesName}: ${item.value}%<br/>`;
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: legendData,
+                    top: 20,
+                    selected: {}
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: months,
+                    axisLabel: {
+                        color: '#666'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '渗透率 (%)',
+                    axisLabel: {
+                        color: '#666',
+                        formatter: '{value}%'
+                    }
+                },
+                series: series
+            };
+
+            trendChart.setOption(option, true);
+
+            setTimeout(() => {
+                trendChart.resize();
+            }, 100);
+        }
+
+        function showUserLayerTrend(type) {
+            const modal = document.getElementById('trendModal');
+            const title = document.getElementById('trendModalTitle');
+
+            modal.style.display = 'flex';
+
+            if (!trendChart) {
+                trendChart = echarts.init(document.getElementById('trendChart'));
+            }
+
+            // 获取趋势数据
+            const trendData = dashboardData['趋势数据'];
+            if (!trendData || !trendData['用户分层']) {
+                console.error('用户分层趋势数据不存在');
+                return;
+            }
+
+            const userLayerTrends = trendData['用户分层'];
+
+            // 确定数据key
+            let dataKey = '';
+            let titleText = '';
+
+            if (type === '全量车主') {
+                dataKey = '全量_全量';
+                titleText = '全量车主分层趋势';
+            } else if (type === '增程整体') {
+                dataKey = '增程_整体';
+                titleText = '增程整体车主分层趋势';
+            } else if (type === '纯电整体') {
+                dataKey = '纯电_整体';
+                titleText = '纯电整体车主分层趋势';
+            } else if (['L6', 'L7', 'L8', 'L9', 'ONE'].includes(type)) {
+                dataKey = `增程_${type}`;
+                titleText = `${type}车主分层趋势`;
+            } else if (['MEGA', 'i8', 'i6'].includes(type)) {
+                dataKey = `纯电_${type}`;
+                titleText = `${type}车主分层趋势`;
+            }
+
+            title.textContent = titleText;
+
+            // 获取具体数据
+            const layerData = userLayerTrends[dataKey];
+            if (!layerData) {
+                console.error(`没有找到 ${dataKey} 的趋势数据`);
+                return;
+            }
+
+            // 准备图表数据
+            const indicators = ['活跃用户占比', '潜在流失用户占比', '流失用户占比', '从未使用用户占比', '新用户首充率'];
+            const colors = {
+                '活跃用户占比': '#52c41a',
+                '潜在流失用户占比': '#faad14',
+                '流失用户占比': '#ff4d4f',
+                '从未使用用户占比': '#8c8c8c',
+                '新用户首充率': '#1890ff'
+            };
+
+            const series = indicators.map(indicator => ({
+                name: indicator,
+                type: 'line',
+                data: layerData[indicator] || [],
+                smooth: true,
+                itemStyle: {
+                    color: colors[indicator]
+                },
+                lineStyle: {
+                    width: 3
+                },
+                emphasis: {
+                    focus: 'series',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}%'
+                    }
+                },
+                symbolSize: 8
+            }));
+
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        let result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            result += `${item.marker} ${item.seriesName}: ${item.value}%<br/>`;
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: indicators,
+                    top: 20,
+                    selected: {}
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: layerData.months || [],
+                    axisLabel: {
+                        color: '#666'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比 (%)',
+                    min: 0,
+                    max: 100,
+                    axisLabel: {
+                        color: '#666',
+                        formatter: '{value}%'
+                    }
+                },
+                series: series
+            };
+
+            trendChart.setOption(option, true);
+
+            setTimeout(() => {
+                trendChart.resize();
+            }, 100);
+        }
+
+        function closeTrendModal(event) {
+            if (!event || event.target.id === 'trendModal') {
+                document.getElementById('trendModal').style.display = 'none';
+            }
+        }
+
+        // 实现详细数据页面功能
+        function showDetailPage(metric) {
+            console.log('=== showDetailPage 调试开始 ===');
+            console.log('当前指标:', metric);
+
+            document.getElementById('detailPageTitle').textContent = metric;
+            document.querySelector('.main-container').style.display = 'none';
+            document.querySelector('.nav-container').style.display = 'none';
+            document.getElementById('detailPageContainer').style.display = 'block';
+
+            // 获取数据
+            const kpiData = dashboardData['核心KPI'];
+            const targetData = dashboardData['目标处理后'] || {};
+            const durationData = dashboardData['按时长统计'] || {};
+
+            console.log('kpiData:', kpiData);
+            console.log('targetData:', targetData);
+            console.log('durationData:', durationData);
+
+            // ✅ 新增：获取单枪日指标的时长数据
+            let dailyDurationData = {};
+            if (RenderManager.daily_metrics_data && RenderManager.daily_metrics_data.duration_metrics) {
+                dailyDurationData = RenderManager.daily_metrics_data.duration_metrics;
+            }
+            console.log('dailyDurationData:', dailyDurationData);
+
+            if (!kpiData || !kpiData[metric]) {
+                console.log('错误：kpiData中没有找到指标', metric);
+                document.getElementById('detailDataBody').innerHTML = '<tr><td colspan="10">暂无数据</td></tr>';
+                return;
+            }
+
+            const metricData = kpiData[metric];
+            console.log('metricData:', metricData);
+
+            const categories = ['全国整体', '城市整体', '城市自营', '城市加盟', '城市门店',
+                '高速整体', '高速线上', '高速线下', '旅游线路'];
+
+            // 生成表格数据
+            const tableRows = [];
+
+            // 1. 2025年H1目标行
+            console.log('=== 生成目标行 ===');
+            const targetRow = [`${dashboardData['周期名称'] || '2025年全年'}目标`];
+            categories.forEach(cat => {
+                let target = '--';
+                if (targetData[metric] && targetData[metric][cat]) {
+                    target = RenderManager.formatNumber(targetData[metric][cat]);
+                    // 添加单位
+                    if (metric === '充电网络收入') target += '元';
+                    else if (metric === '总充电量') target += '度';
+                    else if (metric === '单枪日服务费收入') target += '元';
+                    else if (metric === '单枪日电量') target += '度';
+                }
+                targetRow.push(target);
+            });
+            tableRows.push(targetRow);
+
+            // 2. 年初至今累计行
+            const ytdRow = ['年初至今累计'];
+            categories.forEach(cat => {
+                let value = '--';
+                if (metricData[cat] !== undefined) {
+                    if (typeof metricData[cat] === 'object' && metricData[cat].stations !== undefined) {
+                        // 站桩数特殊处理
+                        value = RenderManager.formatNumber(metricData[cat].stations);
+                    } else {
+                        value = RenderManager.formatNumber(metricData[cat], 0);
+                        // 添加单位
+                        if (metric === '充电网络收入') value += '元';
+                        else if (metric === '总充电量') value += '度';
+                        else if (metric === '单枪日服务费收入') value += '元';
+                        else if (metric === '单枪日电量') value += '度';
+                        else if (metric === '理想车主公充电量渗透率') value += '%';
+                    }
+                }
+                ytdRow.push(value);
+            });
+            tableRows.push(ytdRow);
+
+            // 3. ✅ 按上线时长分类 - 根据指标类型决定是否显示
+            console.log('=== 处理时长分类数据 ===');
+            const timePeriods = ['1个月内', '1-3个月', '3-6个月', '6个月-1年', '1-2年', '2-3年', '超3年'];
+
+            if (metric === '充电网络站桩数' && durationData && Object.keys(durationData).length > 0) {
+                const availablePeriods = timePeriods.filter(period => durationData[period]);
+
+                // 添加分组标题行
+                const groupRow = ['场站上线时长分组'];
+                categories.forEach(() => groupRow.push('')); // 为每个数据列添加空值
+                tableRows.push(groupRow);
+
+                // 添加具体时长行
+                availablePeriods.forEach((period) => {
+                    const periodRow = [`　　${period}`]; // 使用全角空格缩进
+                    const periodStats = durationData[period] || {};
+
+                    categories.forEach(cat => {
+                        let value = '--';
+                        if (periodStats[cat]) {
+                            const stats = periodStats[cat];
+                            if (stats.stations !== undefined) {
+                                value = RenderManager.formatNumber(stats.stations || 0);
+                            }
+                        }
+                        periodRow.push(value);
+                    });
+                    tableRows.push(periodRow);
+                });
+            } else if (metric === '单枪日服务费收入' || metric === '单枪日电量') {
+                // 添加分组标题行
+                const groupRow = ['场站上线时长分组'];
+                categories.forEach(() => groupRow.push('')); // 为每个数据列添加空值
+                tableRows.push(groupRow);
+
+                // 添加具体时长行
+                timePeriods.forEach((period) => {
+                    const periodRow = [`　　${period}`]; // 使用全角空格缩进
+                    const periodStats = dailyDurationData[period] || {};
+
+                    categories.forEach(cat => {
+                        let value = '--';
+                        if (periodStats[cat]) {
+                            if (metric === '单枪日服务费收入' && periodStats[cat].revenue !== undefined) {
+                                value = RenderManager.formatNumber(periodStats[cat].revenue, 0) + '元';
+                            } else if (metric === '单枪日电量' && periodStats[cat].power !== undefined) {
+                                value = RenderManager.formatNumber(periodStats[cat].power, 0) + '度';
+                            }
+                        }
+                        periodRow.push(value);
+                    });
+                    tableRows.push(periodRow);
+                });
+            }
+
+            const tbody = document.getElementById('detailDataBody');
+            tbody.innerHTML = tableRows.map(row => `
+                <tr ${row[0].includes('场站上线时长分组') ? 'font-weight: bold; text-align: right; style="background-color: #f8f9fa;"' : ''}>
+                    <td style="${row[0].includes('场站上线时长分组') ? 'text-align: right; font-weight: bold; style="background-color: #f8f9fa;"' :
+                    row[0].includes('目标') || row[0].includes('累计') ? 'text-align: right; font-weight: bold;' :
+                        row[0].includes('　　') ? 'text-align: right; background-color: #f8f9fa;' :
+                            'text-align: right;'}">${row[0]}</td>
+                    ${row.slice(1).map((cell, index) => `
+                        <td class="number" ${row[0].includes('场站上线时长分组') ? 'style="background-color: #f8f9fa;"' : ''}>${cell}</td>
+                    `).join('')}
+                </tr>
+            `).join('');
+
+            console.log('=== showDetailPage 调试结束 ===');
+        }
+        function backToOverview() {
+            document.getElementById('detailPageContainer').style.display = 'none';
+            document.querySelector('.nav-container').style.display = 'block';
+            document.querySelector('.main-container').style.display = 'block';
+        }
+
+        // 初始化
+        window.onload = function () {
+            // 检查是否需要强制刷新
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('refresh') === 'true') {
+                // 清除所有缓存
+                localStorage.clear();
+                storageManager.init().then(() => {
+                    // 清除IndexedDB中的数据
+                    storageManager.setData('dashboardData', null);
+                    storageManager.setData('cacheTime', 0);
+                });
+
+                // 移除URL参数
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            PageManager.init();
+        };
+    </script>
+</body>
+
+</html>

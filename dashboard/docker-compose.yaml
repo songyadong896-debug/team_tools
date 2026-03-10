@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: swr.cn-north-4.myhuaweicloud.com/library/mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: lcp_business_management
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - fastapi-network
+
+  fastapi:
+    build: .  # 👈 这里使用 build 而不是 image
+    container_name: fastapi-app
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: 123456
+      DB_PORT: 3306
+      DB_NAME: lcp_business_management
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - mysql
+    networks:
+      - fastapi-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  fastapi-network:

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>理想汽车 - 数据上传</title>
+    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* 保留您原有的所有CSS样式 */
+        :root {
+            --primary-color: rgb(0, 45, 40);
+            --primary-light: rgba(0, 45, 40, 0.9);
+            --primary-lighter: rgba(0, 45, 40, 0.1);
+            --secondary-color: rgb(206, 164, 114);
+            --secondary-light: rgba(206, 164, 114, 0.1);
+            --bg-color: #ffffff;
+            --bg-gray: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: #e8e8e8;
+            --border-light: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --text-light: #8c8c8c;
+            --success-color: #52c41a;
+            --warning-color: #faad14;
+            --error-color: #ff4d4f;
+            --shadow-sm: 0 2px 8px rgba(0, 45, 40, 0.06);
+            --shadow-md: 0 4px 16px rgba(0, 45, 40, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 45, 40, 0.12);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-gray);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 导航栏样式 */
+        .nav-container {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            padding: 0 24px;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            height: 64px;
+        }
+
+        .nav-logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            margin-right: 56px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo::before {
+            content: '';
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .nav-link {
+            margin-left: auto;
+            color: white;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            background: white;
+            color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 主内容区域 */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+            min-height: calc(100vh - 64px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 页面头部 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .page-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        /* 文件上传区域 */
+        .upload-card {
+            background: white;
+            border-radius: 24px;
+            padding: 80px 60px;
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .upload-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--secondary-light) 0%, transparent 70%);
+            opacity: 0.5;
+            animation: rotate 30s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .upload-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+            opacity: 0.8;
+        }
+
+        .upload-container {
+            border: 3px dashed var(--primary-color);
+            border-radius: 20px;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, white 0%, var(--bg-gray) 100%);
+            transition: var(--transition);
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-container:hover {
+            border-color: var(--secondary-color);
+            background: linear-gradient(135deg, var(--secondary-light) 0%, white 100%);
+            transform: scale(1.02);
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        .upload-button {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 16px 48px;
+            border-radius: 28px;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        }
+
+        .upload-button::before {
+            content: '📂';
+            font-size: 20px;
+        }
+
+        .upload-info {
+            margin-top: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .upload-tips {
+            margin-top: 32px;
+            padding: 20px;
+            background: var(--bg-gray);
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .upload-tips h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .upload-tips ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .upload-tips li {
+            padding: 6px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .upload-tips li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+        }
+
+        #uploadStatus {
+            margin-top: 32px;
+            font-size: 16px;
+            font-weight: 500;
+            min-height: 24px;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-light);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 新增：同步到数据库按钮 */
+        .sync-button {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 12px 32px;
+            border-radius: 24px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .sync-button.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .sync-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .sync-button::before {
+            content: '☁️';
+            font-size: 18px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 32px 16px;
+            }
+
+            .page-title {
+                font-size: 28px;
+            }
+
+            .upload-card {
+                padding: 48px 32px;
+            }
+
+            .upload-container {
+                padding: 40px 24px;
+            }
+
+            .upload-button {
+                font-size: 16px;
+                padding: 12px 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav-container">
+        <div class="nav-content">
+            <div class="nav-logo">理想汽车充电网络运营管理</div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <div class="page-header">
+            <h1 class="page-title">数据上传中心</h1>
+            <p class="page-subtitle">请上传Excel数据文件以更新运营看板</p>
+        </div>
+
+        <div class="upload-card">
+            <div class="upload-icon">📊</div>
+            <div class="upload-container">
+                <input type="file" id="fileInput" class="upload-input" accept=".xlsx,.xls" />
+                <label for="fileInput" class="upload-button">选择Excel文件</label>
+                <div class="upload-info">支持 .xlsx 和 .xls 格式</div>
+                <div id="uploadStatus"></div>
+                <button id="syncButton" class="sync-button" style="display: none;">同步到数据库</button>
+            </div>
+
+            <div class="upload-tips">
+                <h3>📌 上传须知</h3>
+                <ul>
+                    <li>请确保Excel文件包含所有必需的数据表</li>
+                    <li>数据格式应与模板保持一致</li>
+                    <li>文件大小建议不超过10MB</li>
+                    <li>上传成功后数据将保存在本地</li>
+                    <li>可选择同步到数据库实现多端访问</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DataStorageManager {
+            constructor() {
+                this.dbName = 'DashboardDB';
+                this.storeName = 'dashboardData';
+                this.version = 1;
+                this.db = null;
+            }
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve();
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName);
+                        }
+                    };
+                });
+            }
+
+            async setData(key, data) {
+                if (!this.db) await this.init();
+
+                const transaction = this.db.transaction([this.storeName], 'readwrite');
+                const store = transaction.objectStore(this.storeName);
+
+                return new Promise((resolve, reject) => {
+                    const request = store.put(data, key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async getData(key) {
+                if (!this.db) await this.init();
+
+                const transaction = this.db.transaction([this.storeName], 'readonly');
+                const store = transaction.objectStore(this.storeName);
+
+                return new Promise((resolve, reject) => {
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        }
+
+        // 创建全局存储管理器实例
+        const storageManager = new DataStorageManager();
+        // ============ 新代码添加结束 ============
+        let currentData = null;
+
+        // 文件上传处理
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            const uploadStatus = document.getElementById('uploadStatus');
+
+            uploadStatus.innerHTML = '<div style="color: var(--primary-color);"><span class="loading"></span> 正在读取文件...</div>';
+
+            reader.onload = async function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // 解析所有工作表
+                    const dashboardData = {};
+                    workbook.SheetNames.forEach(sheetName => {
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        dashboardData[sheetName] = jsonData;
+                    });
+
+                    // 保存到变量
+                    currentData = dashboardData;
+
+                    // 将数据保存到localStorage
+                    try {
+                        await storageManager.setData('dashboardData', dashboardData);
+                        await storageManager.setData('uploadTime', new Date().toISOString());
+
+                        // 只在localStorage中保存基本信息（用于快速检查）
+                        localStorage.setItem('dashboardUploaded', 'true');
+                        localStorage.setItem('uploadTime', new Date().toISOString());
+
+                        uploadStatus.innerHTML = '<div style="color: var(--success-color); font-weight: 500;">✓ 数据上传成功！数据已保存到本地。</div>';
+
+                        // 显示同步按钮
+                        const syncButton = document.getElementById('syncButton');
+                        syncButton.style.display = 'inline-flex';
+                        setTimeout(() => {
+                            syncButton.classList.add('show');
+                        }, 100);
+                    } catch (storageError) {
+                        console.error('存储错误:', storageError);
+                        uploadStatus.innerHTML = '<div style="color: var(--error-color); font-weight: 500;">✗ 数据保存失败：' + storageError.message + '</div>';
+                    }
+
+                    // 显示同步按钮
+                    const syncButton = document.getElementById('syncButton');
+                    syncButton.style.display = 'inline-flex';
+                    setTimeout(() => {
+                        syncButton.classList.add('show');
+                    }, 100);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    uploadStatus.innerHTML = '<div style="color: var(--error-color); font-weight: 500;">✗ 文件读取失败：' + error.message + '</div>';
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        // 同步到数据库
+        document.getElementById('syncButton').addEventListener('click', async function () {
+            if (!currentData) {
+                alert('请先上传文件');
+                return;
+            }
+
+            const uploadStatus = document.getElementById('uploadStatus');
+            uploadStatus.innerHTML = '<div style="color: var(--primary-color);"><span class="loading"></span> 正在同步到数据库...</div>';
+
+            try {
+                const response = await fetch('/api/sync-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        data: currentData,
+                        timestamp: new Date().toISOString(),
+                        user: 'system'
+                    })
+                });
+
+                // 先检查响应类型
+                const contentType = response.headers.get("content-type");
+
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    // 是JSON响应
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        uploadStatus.innerHTML = '<div style="color: var(--success-color); font-weight: 500;">✓ 数据已成功同步到数据库！正在跳转到看板...</div>';
+
+                        // 清除本地缓存，强制刷新
+                        localStorage.removeItem('dashboardUploaded');
+                        
+                        // 2秒后自动跳转，带上刷新参数
+                        setTimeout(() => {
+                            window.location.href = '/ThorBI?refresh=true';
+                        }, 2000);
+                    } else {
+                        uploadStatus.innerHTML = '<div style="color: var(--error-color); font-weight: 500;">✗ 同步失败：' + (result.detail || result.message || '未知错误') + '</div>';
+                    }
+                } else {
+                    // 不是JSON，可能是HTML错误页面
+                    const text = await response.text();
+                    console.error('收到非JSON响应:', text);
+
+                    // 尝试从HTML中提取错误信息
+                    let errorMessage = '服务器返回了错误页面';
+                    if (text.includes('404')) {
+                        errorMessage = 'API接口未找到 (404)';
+                    } else if (text.includes('500')) {
+                        errorMessage = '服务器内部错误 (500)';
+                    } else if (text.includes('Method Not Allowed')) {
+                        errorMessage = '请求方法不允许';
+                    }
+
+                    uploadStatus.innerHTML = '<div style="color: var(--error-color); font-weight: 500;">✗ 同步失败：' + errorMessage + '</div>';
+                }
+            } catch (error) {
+                console.error('请求失败:', error);
+                uploadStatus.innerHTML = '<div style="color: var(--error-color); font-weight: 500;">✗ 同步失败：' + error.message + '</div>';
+            }
+        });
+
+        // 检查是否已有数据
+        window.addEventListener('load', async function () {
+            const uploadTime = localStorage.getItem('uploadTime');
+            const hasData = localStorage.getItem('dashboardUploaded');
+
+            if (hasData && uploadTime) {
+                try {
+                    // 从IndexedDB读取数据
+                    const savedData = await storageManager.getData('dashboardData');
+
+                    if (savedData) {
+                        const time = new Date(uploadTime);
+                        const timeStr = time.toLocaleDateString('zh-CN') + ' ' + time.toLocaleTimeString('zh-CN');
+                        document.getElementById('uploadStatus').innerHTML =
+                            `<div style="color: var(--text-secondary);">上次数据更新时间：${timeStr}</div>`;
+
+                        // 如果有本地数据，也显示同步按钮
+                        currentData = savedData;
+                        const syncButton = document.getElementById('syncButton');
+                        syncButton.style.display = 'inline-flex';
+                        setTimeout(() => {
+                            syncButton.classList.add('show');
+                        }, 100);
+                    }
+                } catch (error) {
+                    console.error('读取保存的数据失败:', error);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

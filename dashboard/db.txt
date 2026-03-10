@@ -1,0 +1,59 @@
+# MySQL数据库配置
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '123456',
+    'database': 'prodashboard'
+}
+
+def get_db_connection():
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        return connection
+    except Error as e:
+        print(f"Error connecting to MySQL: {e}")
+        return None
+
+def init_database():
+    """初始化数据库和表结构"""
+    try:
+        connection = mysql.connector.connect(
+            host=DB_CONFIG['host'],
+            user=DB_CONFIG['user'],
+            password=DB_CONFIG['password']
+        )
+        cursor = connection.cursor()
+        
+        cursor.execute("CREATE DATABASE IF NOT EXISTS prodashboard")
+        cursor.execute("USE prodashboard")
+        
+        # 删除旧表（注意：这会删除所有数据！）
+        cursor.execute("DROP TABLE IF EXISTS dashboard_raw_data")
+        
+        # 创建新表
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS dashboard_raw_data (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            sheet_name VARCHAR(100),
+            row_data JSON,
+            upload_batch VARCHAR(50),
+            upload_date DATE DEFAULT (CURRENT_DATE),
+            version INT DEFAULT 1,
+            is_latest BOOLEAN DEFAULT TRUE,
+            upload_user VARCHAR(50) DEFAULT 'system',
+            dt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_sheet (sheet_name),
+            INDEX idx_batch (upload_batch),
+            INDEX idx_date_version (upload_date, version),
+            INDEX idx_latest (upload_date, is_latest),
+            INDEX idx_dt (dt)
+        )
+        """)
+        
+        connection.commit()
+        cursor.close()
+        connection.close()
+        print("数据库初始化成功")
+        
+    except Error as e:
+        print(f"数据库初始化失败: {e}")

@@ -1,0 +1,329 @@
+:root {
+    /* 主题色 - 新的配色方案 */
+    --primary-color: #0a7871;
+    /* RGB 10 120 113 */
+    --primary-hover: #0d9488;
+    /* 稍亮一点的主题色 */
+    --primary-light: #e8f5eb;
+    /* RGB 232 245 235 */
+    --dark-color: #002d28;
+    /* RGB 0 45 40 */
+    --highlight-color: #d0a675;
+    /* RGB 208 166 117 */
+
+    /* 保持不变的等级色 */
+    --success-color: #52c41a;
+    --warning-color: #faad14;
+    --danger-color: #ff4d4f;
+    --info-color: #0a7871;
+    /* 使用新主题色 */
+
+    /* 等级色保持不变 */
+    --level-p10: #52c41a;
+    --level-p30: #95de64;
+    --level-p50: #ffa940;
+    --level-p90: #ff4d4f;
+
+    /* 中性色 */
+    --text-primary: rgba(0, 0, 0, 0.88);
+    --text-secondary: rgba(0, 0, 0, 0.45);
+    --border-color: #d9d9d9;
+    --bg-color: #f5f5f5;
+}
+
+/* 全局样式 */
+body {
+    background-color: var(--bg-color);
+}
+
+/* 布局样式 */
+.app-layout {
+    min-height: 100vh;
+    background: var(--bg-color);
+}
+
+/* 添加这个 - 内容区域样式 */
+.app-content {
+    padding: 24px 48px;
+    /* 上下24px，左右48px的内边距 */
+    max-width: 1440px;
+    /* 最大宽度限制 */
+    margin: 0 auto;
+    /* 水平居中 */
+    width: 100%;
+    box-sizing: border-box;
+    /* 确保 padding 包含在宽度内 */
+}
+
+
+/* 白色标题栏样式 */
+.app-header {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-logo {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 更新按钮主题色 */
+.ant-btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.ant-btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* 更新标签页主题色 */
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--primary-color);
+}
+
+.ant-tabs-ink-bar {
+    background: var(--primary-color);
+}
+
+.ant-tabs-tab:hover {
+    color: var(--primary-hover);
+}
+
+/* 标签筛选按钮 */
+.ant-btn-sm {
+    font-size: 13px;
+    height: 28px;
+    padding: 0 12px;
+}
+
+/* 表格固定表头样式优化 */
+.ant-table-sticky-holder {
+    background: #fff;
+    z-index: 3;
+}
+
+.ant-table-sticky-scroll {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+}
+
+/* 趋势标签样式 */
+.ant-tag {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* 表格行高调整以适应两行文字 */
+.ant-table-cell {
+    vertical-align: middle;
+}
+
+/* 更新徽章颜色 */
+.version-badge {
+    background-color: var(--highlight-color) !important;
+}
+
+/* KPI 卡片 */
+.kpi-card {
+    height: 100%;
+}
+
+.kpi-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+}
+
+.kpi-icon {
+    font-size: 48px;
+    color: var(--primary-color);
+    margin-bottom: 16px;
+}
+
+.kpi-value {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+}
+
+/* 等级标签 */
+.level-tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    display: inline-block;
+}
+
+.level-tag-P10 {
+    background: var(--level-p10);
+}
+
+.level-tag-P30 {
+    background: var(--level-p30);
+}
+
+.level-tag-P50 {
+    background: var(--level-p50);
+}
+
+.level-tag-P90 {
+    background: var(--level-p90);
+}
+
+/* 趋势标签 */
+.trend-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.trend-up {
+    color: var(--success-color);
+}
+
+.trend-down {
+    color: var(--danger-color);
+}
+
+.trend-stable {
+    color: var(--text-secondary);
+}
+
+/* 图表容器 */
+.chart-container {
+    height: 400px;
+    width: 100%;
+}
+
+/* 统计卡片网格 */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+/* 排名列表 */
+.rank-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    transition: background 0.3s;
+}
+
+.rank-item:hover {
+    background: var(--bg-color);
+}
+
+.rank-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-right: 12px;
+}
+
+.rank-1,
+.rank-2,
+.rank-3 {
+    background: var(--success-color);
+    color: white;
+}
+
+/* 快速筛选标签 */
+.filter-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.filter-tag {
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* 重点35城网格 */
+.key-cities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.key-city-item {
+    padding: 12px;
+    background: var(--bg-color);
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.key-city-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .app-content {
+        padding: 16px;
+        max-width: 1440px;
+        margin: 0 auto;
+        width: 100%;
+        box-sizing: border-box;
+        /* 确保 padding 包含在宽度内 */
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .key-cities-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+
+/* 加载动画优化 */
+.ant-spin-container {
+    min-height: 400px;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}

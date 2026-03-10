@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>数据上传管理 城市站评价模型财务结果</title>
+    <!-- 添加 SheetJS 用于前端读取Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        /* 原有样式保持不变... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #0a7871;
+            font-size: 24px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            color: #0a7871;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f5eb;
+            padding-bottom: 10px;
+        }
+        
+        /* 统计区域样式 */
+        .stats-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .quarter-section {
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .quarter-header {
+            background: #0a7871;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .quarter-content {
+            padding: 15px;
+        }
+        
+        .version-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .version-item:last-child {
+            border-bottom: none;
+        }
+        
+        .version-name {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .version-count {
+            background: #e8f5eb;
+            color: #0a7871;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* 上传区域样式 */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            padding: 30px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #0a7871;
+        }
+        
+        input[type="file"] {
+            margin: 15px 0;
+        }
+        
+        button {
+            background-color: #0a7871;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0d9488;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* 消息提示 */
+        .message {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        /* 进度条 */
+        .progress {
+            width: 100%;
+            height: 6px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #0a7871;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0a7871;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .refresh-btn {
+            background: transparent;
+            color: #0a7871;
+            padding: 5px 10px;
+            font-size: 12px;
+            border: 1px solid #0a7871;
+        }
+        
+        .refresh-btn:hover {
+            background: #e8f5eb;
+        }
+        
+        .summary {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* 确认对话框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn-confirm {
+            background-color: #ff4d4f;
+        }
+        
+        .btn-confirm:hover {
+            background-color: #ff7875;
+        }
+        
+        .btn-cancel {
+            background-color: #d9d9d9;
+            color: #333;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #bfbfbf;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>城市站评价模型财务结果 - 数据管理中心</h1>
+        </div>
+        
+        <div class="main-grid">
+            <!-- 左侧：数据统计 -->
+            <div class="panel">
+                <h2>
+                    数据统计概览
+                    <button class="refresh-btn" onclick="loadStatistics()">刷新</button>
+                </h2>
+                
+                <div id="statsContainer" class="stats-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        正在加载数据统计...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：上传功能 -->
+            <div class="panel">
+                <h2>Excel数据上传</h2>
+                
+                <div class="upload-area">
+                    <p>选择Excel文件上传</p>
+                    <p style="font-size: 12px; color: #999; margin-top: 5px;">
+                        支持.xlsx和.xls格式，最大50MB
+                    </p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" />
+                    <br>
+                    <button id="uploadBtn" onclick="validateAndUpload()">开始上传</button>
+                </div>
+                
+                <div class="progress" id="progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                
+                <div id="message" class="message"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 确认对话框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">⚠️ 数据覆盖警告</div>
+            <div class="modal-body" id="modalBody">
+                <!-- 动态填充内容 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="cancelUpload()">取消</button>
+                <button class="btn-confirm" onclick="confirmUpload()">确认上传</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 全局变量
+        let isUploading = false;
+        let pendingFile = null;
+        let detectedQuarter = null;
+        
+        // 页面加载时自动获取统计数据
+        window.onload = function() {
+            loadStatistics();
+        };
+        
+        // 加载统计数据
+        async function loadStatistics() {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>正在加载数据统计...</div>';
+            
+            try {
+                const response = await fetch('/api/pxxdash/statistics');
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayStatistics(result.data);
+                } else {
+                    container.innerHTML = '<div class="empty-state">暂无数据</div>';
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+                container.innerHTML = '<div class="empty-state">加载失败，请稍后重试</div>';
+            }
+        }
+        
+        // 显示统计数据
+        function displayStatistics(data) {
+            const container = document.getElementById('statsContainer');
+            
+            if (!data || Object.keys(data).length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无数据</div>';
+                return;
+            }
+            
+            let html = '';
+            let totalStations = 0;
+            let totalVersions = 0;
+            
+            const quarters = Object.keys(data).sort().reverse();
+            
+            quarters.forEach(quarter => {
+                const quarterData = data[quarter];
+                const quarterTotal = Object.values(quarterData).reduce((sum, count) => sum + count, 0);
+                const versionCount = Object.keys(quarterData).length;
+                
+                totalStations += quarterTotal;
+                totalVersions += versionCount;
+                
+                html += `
+                    <div class="quarter-section">
+                        <div class="quarter-header">
+                            <span>${quarter}</span>
+                            <span>共 ${quarterTotal.toLocaleString()} 个场站</span>
+                        </div>
+                        <div class="quarter-content">
+                `;
+                
+                const versions = Object.keys(quarterData).sort();
+                versions.forEach(version => {
+                    const count = quarterData[version];
+                    html += `
+                        <div class="version-item">
+                            <span class="version-name">${version}</span>
+                            <span class="version-count">${count.toLocaleString()} 个</span>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            const summaryHtml = `
+                <div class="summary">
+                    总计：${quarters.length} 个季度，${totalVersions} 个版本，${totalStations.toLocaleString()} 个场站
+                </div>
+            `;
+            
+            container.innerHTML = summaryHtml + html;
+        }
+        
+        // 验证并上传文件
+        async function validateAndUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showMessage('请选择要上传的文件', 'error');
+                return;
+            }
+            
+            // 基本验证
+            const fileName = file.name.toLowerCase();
+            if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+                showMessage('只支持Excel文件(.xlsx或.xls)', 'error');
+                return;
+            }
+            
+            if (file.size > 50 * 1024 * 1024) {
+                showMessage('文件大小不能超过50MB', 'error');
+                return;
+            }
+            
+            pendingFile = file;
+            
+            // 读取Excel检查季度
+            showMessage('正在检查文件内容...', 'info');
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    // 检查是否有数据
+                    if (!jsonData || jsonData.length === 0) {
+                        showMessage('Excel文件中没有数据', 'error');
+                        return;
+                    }
+                    
+                    // 查找季度列
+                    const quarterColumn = findQuarterColumn(jsonData[0]);
+                    if (!quarterColumn) {
+                        showMessage('未找到"季度"列，请检查Excel格式', 'error');
+                        return;
+                    }
+                    
+                    // 获取第一行的季度值
+                    const firstQuarter = jsonData[0][quarterColumn];
+                    if (!firstQuarter) {
+                        showMessage('第一行数据的季度值为空', 'error');
+                        return;
+                    }
+                    
+                    // 验证季度格式
+                    if (!isValidQuarterFormat(firstQuarter)) {
+                        showMessage(`季度格式错误: "${firstQuarter}"，应为类似"2024Q1"的格式`, 'error');
+                        return;
+                    }
+                    
+                    detectedQuarter = firstQuarter;
+                    
+                    // 检查所有数据的季度是否一致
+                    const differentQuarters = new Set();
+                    jsonData.forEach(row => {
+                        if (row[quarterColumn]) {
+                            differentQuarters.add(row[quarterColumn]);
+                        }
+                    });
+                    
+                    if (differentQuarters.size > 1) {
+                        showMessage(`文件中包含多个季度的数据: ${Array.from(differentQuarters).join(', ')}，请确保只上传单个季度的数据`, 'error');
+                        return;
+                    }
+                    
+                    // 检查数据库是否已有该季度数据
+                    await checkQuarterExists(firstQuarter);
+                    
+                } catch (error) {
+                    console.error('读取Excel失败:', error);
+                    showMessage('读取Excel文件失败，请检查文件格式', 'error');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // 查找季度列
+        function findQuarterColumn(firstRow) {
+            const possibleNames = ['季度', 'quarter', 'Quarter', 'QUARTER', '季度'];
+            for (const key of Object.keys(firstRow)) {
+                if (possibleNames.includes(key)) {
+                    return key;
+                }
+            }
+            return null;
+        }
+        
+        // 验证季度格式
+        function isValidQuarterFormat(quarter) {
+            // 检查是否符合 YYYYQN 格式 (如 2024Q1)
+            const pattern = /^\d{4}Q[1-4]$/;
+            return pattern.test(quarter);
+        }
+        
+        // 检查季度是否存在
+        async function checkQuarterExists(quarter) {
+            try {
+                const response = await fetch(`/api/pxxdash/check-quarter/${quarter}`);
+                const result = await response.json();
+                
+                if (result.exists) {
+                    // 显示确认对话框
+                    const modalBody = document.getElementById('modalBody');
+                    modalBody.innerHTML = `
+                        <p>检测到数据库中已存在 <strong>${quarter}</strong> 的数据：</p>
+                        <ul>
+                            <li>现有版本数：${result.versionCount} 个</li>
+                            <li>现有场站数：${result.stationCount} 个</li>
+                        </ul>
+                        <p style="color: #ff4d4f; margin-top: 15px;">
+                            <strong>警告：</strong>上传新数据后，该季度的旧版本数据将被标记为历史版本，不再显示在看板中。
+                        </p>
+                        <p>是否确定要继续上传？</p>
+                    `;
+                    document.getElementById('confirmModal').style.display = 'block';
+                } else {
+                    // 没有旧数据，直接上传
+                    uploadFile();
+                }
+            } catch (error) {
+                console.error('检查季度失败:', error);
+                showMessage('检查季度数据失败，请稍后重试', 'error');
+            }
+        }
+        
+        // 确认上传
+        function confirmUpload() {
+            document.getElementById('confirmModal').style.display = 'none';
+            uploadFile();
+        }
+        
+        // 取消上传
+        function cancelUpload() {
+            document.getElementById('confirmModal').style.display = 'none';
+            pendingFile = null;
+            detectedQuarter = null;
+            showMessage('已取消上传', 'info');
+        }
+        
+        // 文件上传函数
+        async function uploadFile() {
+            if (isUploading) return;
+            
+            const file = pendingFile || document.getElementById('fileInput').files[0];
+            const messageDiv = document.getElementById('message');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressDiv = document.getElementById('progress');
+            const progressBar = document.getElementById('progressBar');
+            
+            isUploading = true;
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '上传中...';
+            progressDiv.style.display = 'block';
+            progressBar.style.width = '0%';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                showMessage('正在上传文件...', 'info');
+                
+                const response = await fetch('/dataking/upload/pxxdash', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-User': 'admin'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (result.task_id) {
+                        // 异步处理，轮询状态
+                        showMessage('文件已上传，正在后台处理...', 'info');
+                        await checkTaskStatus(result.task_id);
+                    } else {
+                        // 同步处理完成
+                        progressBar.style.width = '100%';
+                        showMessage(`上传成功！版本号: ${result.version_id}`, 'success');
+                        
+                        setTimeout(() => {
+                            loadStatistics();
+                            resetUploadForm();
+                        }, 2000);
+                    }
+                } else {
+                    showMessage(`上传失败: ${result.errors ? result.errors.join(', ') : result.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`上传出错: ${error.message}`, 'error');
+            } finally {
+                isUploading = false;
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '开始上传';
+                pendingFile = null;
+                detectedQuarter = null;
+            }
+        }
+        
+        // 检查任务状态
+        async function checkTaskStatus(taskId) {
+            const progressBar = document.getElementById('progressBar');
+            
+            const checkInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/dataking/upload/status/${taskId}`);
+                    const status = await response.json();
+                    
+                    // 更新进度条
+                    progressBar.style.width = `${status.progress}%`;
+                    
+                    if (status.status === 'completed') {
+                        clearInterval(checkInterval);
+                        progressBar.style.width = '100%';
+                        showMessage(`处理完成！版本号: ${status.result.version_id}`, 'success');
+                        
+                        setTimeout(() => {
+                            loadStatistics();
+                            resetUploadForm();
+                        }, 2000);
+                    } else if (status.status === 'failed') {
+                        clearInterval(checkInterval);
+                        progressBar.style.width = '0%';
+                        showMessage(`处理失败: ${status.errors ? status.errors.join(', ') : status.error}`, 'error');
+                    } else {
+                        // 更新处理消息
+                        showMessage(`处理中: ${status.message}`, 'info');
+                    }
+                } catch (error) {
+                    clearInterval(checkInterval);
+                    showMessage(`查询状态失败: ${error.message}`, 'error');
+                }
+            }, 2000); // 每2秒查询一次
+        }
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+        
+        function resetUploadForm() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progress').style.display = 'none';
+            document.getElementById('message').style.display = 'none';
+        }
+        
+        // 文件选择后显示文件信息
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const size = (file.size / 1024 / 1024).toFixed(2);
+                showMessage(`已选择: ${file.name} (${size}MB)`, 'info');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,671 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>理想汽车 - 数据上传</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #F8F9FA;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部导航栏 */
+        .top-nav {
+            height: 64px;
+            background: linear-gradient(90deg, #002D28 0%, #003630 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background-color: #CEA472;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #002D28;
+        }
+
+        .system-name {
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        /* 主内容区 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .upload-card {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .upload-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .upload-title {
+            font-size: 28px;
+            font-weight: 500;
+            color: #002D28;
+            margin-bottom: 12px;
+        }
+
+        .upload-subtitle {
+            font-size: 16px;
+            color: #8C8C8C;
+        }
+
+        /* 文件要求说明 */
+        .file-requirements {
+            background: #F8F9FA;
+            border: 1px solid #E8E8E8;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .requirement-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #002D28;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .requirement-title::before {
+            content: '📋';
+            font-size: 20px;
+        }
+
+        .requirement-list {
+            list-style: none;
+            padding-left: 28px;
+        }
+
+        .requirement-list li {
+            position: relative;
+            margin-bottom: 12px;
+            color: #4A4A4A;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .requirement-list li::before {
+            content: '✓';
+            position: absolute;
+            left: -20px;
+            color: #52C41A;
+            font-weight: bold;
+        }
+
+        .sheet-format {
+            background: #F0F8FF;
+            border: 1px solid #B3D9FF;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
+        .sheet-format-title {
+            font-weight: 500;
+            color: #002D28;
+            margin-bottom: 8px;
+        }
+
+        .sheet-format-content {
+            color: #4A4A4A;
+            line-height: 1.6;
+        }
+
+        /* 上传区域 */
+        .upload-area {
+            border: 2px dashed #D9D9D9;
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #FAFAFA;
+        }
+
+        .upload-area:hover {
+            border-color: #002D28;
+            background: #F0F8FF;
+        }
+
+        .upload-area.dragging {
+            border-color: #002D28;
+            background: #E6F4FF;
+            border-style: solid;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #002D28;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #4A4A4A;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #8C8C8C;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 文件信息展示 */
+        .file-info {
+            display: none;
+            background: #F0F8FF;
+            border: 1px solid #B3D9FF;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            font-size: 14px;
+            color: #002D28;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #8C8C8C;
+        }
+
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 32px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #002D28 0%, #003630 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 45, 40, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 45, 40, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #002D28;
+            border: 1px solid #D9D9D9;
+        }
+
+        .btn-secondary:hover {
+            background: #F8F9FA;
+            border-color: #002D28;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            display: none;
+            margin-top: 24px;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #F0F0F0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #002D28 0%, #CEA472 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: #8C8C8C;
+            text-align: center;
+        }
+
+        /* 成功提示 */
+        .success-message {
+            display: none;
+            background: #F6FFED;
+            border: 1px solid #B7EB8F;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+            text-align: center;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .success-text {
+            color: #52C41A;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .view-links {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .view-link {
+            color: #002D28;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #D9D9D9;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .view-link:hover {
+            background: #002D28;
+            color: white;
+            border-color: #002D28;
+        }
+
+        /* 错误提示 */
+        .error-message {
+            display: none;
+            background: #FFF1F0;
+            border: 1px solid #FFCCC7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+            color: #FF4D4F;
+            font-size: 14px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="top-nav">
+        <div class="logo-section">
+            <div class="logo">理</div>
+            <h1 class="system-name">数据上传中心</h1>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="main-container">
+        <div class="upload-card">
+            <div class="upload-header">
+                <h2 class="upload-title">上传运营数据</h2>
+                <p class="upload-subtitle">请上传包含"单站数据"、"公充渗透率"和"目标"三个Sheet的Excel文件</p>
+            </div>
+
+            <!-- 文件要求说明 -->
+            <div class="file-requirements">
+                <h3 class="requirement-title">文件要求</h3>
+                <ul class="requirement-list">
+                    <li>文件格式：Excel (.xlsx)</li>
+                    <li>必须包含三个Sheet：
+                        <br>- Sheet1: "单站数据"（包含场站运营相关数据）
+                        <br>- Sheet2: "公充渗透率"（包含车型充电量数据）
+                        <br>- Sheet3: "目标"（包含各区域各指标的目标值）
+                    </li>
+                    <li>数据应包含所有大区（北区、中区、东一区、东二区、西区、南区）</li>
+                    <li>确保表头与系统要求一致</li>
+                    <li>文件大小限制：100MB以内</li>
+                </ul>
+                
+                <div class="sheet-format">
+                    <div class="sheet-format-title">目标数据格式示例：</div>
+                    <div class="sheet-format-content">
+                        区域 | 指标 | 目标周期 | 目标<br>
+                        全国 | 公充渗透率 | Q1 | 13%<br>
+                        全国 | 单桩日均充电量 | Q1 | 123<br>
+                        全国 | 单桩日服务费收入 | Q1 | 75<br>
+                        全国 | net收入 | Q1 | 320000<br>
+                        东一区 | 公充渗透率 | Q1 | 13%<br>
+                        ... （其他区域和指标）
+                    </div>
+                </div>
+            </div>
+
+            <!-- 上传区域 -->
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📊</div>
+                <p class="upload-text">点击或拖拽文件到此区域</p>
+                <p class="upload-hint">仅支持 .xlsx 格式的Excel文件</p>
+                <input type="file" id="fileInput" class="file-input" accept=".xlsx">
+            </div>
+
+            <!-- 文件信息 -->
+            <div class="file-info" id="fileInfo">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-size" id="fileSize"></div>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">正在上传...</div>
+            </div>
+
+            <!-- 成功提示 -->
+            <div class="success-message" id="successMessage">
+                <div class="success-icon">✅</div>
+                <div class="success-text">数据上传成功！</div>
+                <div class="view-links">
+                    <a href="/RegionEast1" class="view-link">查看东一区</a>
+                    <a href="/RegionEast2" class="view-link">查看东二区</a>
+                    <a href="/RegionNorth" class="view-link">查看北区</a>
+                    <a href="/RegionSouth" class="view-link">查看南区</a>
+                    <a href="/RegionWest" class="view-link">查看西区</a>
+                    <a href="/RegionCenter" class="view-link">查看中区</a>
+                </div>
+            </div>
+
+            <!-- 错误提示 -->
+            <div class="error-message" id="errorMessage"></div>
+
+            <!-- 按钮组 -->
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="resetUpload()">重新选择</button>
+                <button class="btn btn-primary" id="uploadBtn" disabled onclick="uploadFile()">上传数据</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let selectedFile = null;
+
+        // 点击上传区域触发文件选择
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 文件选择事件
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        // 拖拽事件
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        // 处理文件
+        function handleFile(file) {
+            if (!file) return;
+
+            // 验证文件类型
+            if (!file.name.endsWith('.xlsx')) {
+                showError('请上传 .xlsx 格式的Excel文件');
+                return;
+            }
+
+            // 验证文件大小（50MB）
+            if (file.size > 100 * 1024 * 1024) {
+                showError('文件大小不能超过 100MB');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('show');
+            uploadBtn.disabled = false;
+            hideError();
+            hideSuccess();
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 上传文件
+        async function uploadFile() {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            uploadBtn.disabled = true;
+            progressContainer.classList.add('show');
+            hideError();
+            hideSuccess();
+
+            try {
+                // 第一步：上传文件
+                updateProgress(10);
+                progressText.textContent = '正在上传文件...';
+                
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || '上传失败');
+                }
+
+                const uploadResult = await response.json();
+                const taskId = uploadResult.task_id;
+                
+                updateProgress(20);
+                progressText.textContent = '文件已上传，正在处理...';
+
+                // 第二步：轮询查询处理状态
+                let processed = false;
+                let pollCount = 0;
+                const maxPolls = 120; // 最多查询120次（2分钟）
+                
+                while (!processed && pollCount < maxPolls) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // 每秒查询一次
+                    
+                    const statusResponse = await fetch(`/upload/status/${taskId}`);
+                    if (statusResponse.ok) {
+                        const status = await statusResponse.json();
+                        
+                        // 更新进度
+                        if (status.progress > 0) {
+                            updateProgress(Math.min(status.progress, 99));
+                            progressText.textContent = status.message || '处理中...';
+                        }
+                        
+                        // 检查状态
+                        if (status.status === 'completed') {
+                            processed = true;
+                            updateProgress(100);
+                            progressText.textContent = '处理完成！';
+                            
+                            // 显示结果
+                            setTimeout(() => {
+                                progressContainer.classList.remove('show');
+                                successMessage.innerHTML = `
+                                    <div>✅ 文件处理成功！</div>
+                                    <div style="font-size: 14px; margin-top: 10px;">
+                                        版本ID: ${status.result.version_id}<br>
+                                        站点数据: ${status.result.station_rows} 行<br>
+                                        渗透率数据: ${status.result.penetration_rows} 行
+                                    </div>
+                                `;
+                                successMessage.classList.add('show');
+                                uploadBtn.disabled = false;
+                                
+                                // 3秒后重置
+                                setTimeout(() => {
+                                    resetUpload();
+                                }, 3000);
+                            }, 1000);
+                            
+                        } else if (status.status === 'failed') {
+                            throw new Error(status.error || '处理失败');
+                        }
+                    }
+                    
+                    pollCount++;
+                }
+                
+                if (!processed) {
+                    throw new Error('处理超时，请稍后查看结果');
+                }
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                showError(error.message || '上传失败，请重试');
+                progressContainer.classList.remove('show');
+                uploadBtn.disabled = false;
+            }
+        }
+
+        // 更新进度
+        function updateProgress(percent) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = `正在上传... ${percent}%`;
+        }
+
+        // 重置上传
+        function resetUpload() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            uploadBtn.disabled = true;
+            progressContainer.classList.remove('show');
+            successMessage.classList.remove('show');
+            hideError();
+            progressFill.style.width = '0%';
+        }
+
+        // 显示错误
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        // 隐藏错误
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        // 隐藏成功消息
+        function hideSuccess() {
+            successMessage.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
