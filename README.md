@@ -7,6 +7,7 @@
 ```
 team_tools/
 ├── my-ai-assistant/          # AI 助手全栈应用
+├── dashboard/                # 数据看板管理系统
 ├── 财务看板/                  # 财务数据看板工具
 ├── 充电站健康度评估/          # 充电站健康度评估工具
 └── README.md                 # 本说明文档
@@ -30,6 +31,8 @@ cd team_tools
 ```bash
 cd my-ai-assistant
 # 或
+cd dashboard
+# 或
 cd 财务看板
 # 或
 cd 充电站健康度评估
@@ -42,6 +45,12 @@ cd 充电站健康度评估
 - 技术栈：FastAPI (后端) + React (前端)
 - 功能：智能对话、知识管理、任务追踪、数据分析
 - 详见：[my-ai-assistant/README.md](my-ai-assistant/README.md)
+
+### dashboard
+**数据看板管理系统**
+- 技术栈：FastAPI + PostgreSQL + React
+- 功能：数据可视化、区域数据管理、数据聚合服务、Docker 部署
+- 详见：[dashboard/README.md](dashboard/README.md)
 
 ### 财务看板
 **财务数据可视化看板工具**
