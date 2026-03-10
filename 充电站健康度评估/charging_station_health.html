@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>充电站健康度评估工具</title>
+    <!-- 引入html2canvas库用于截图 -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- 引入jsPDF库用于导出PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 30px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .score-circle {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .score-circle::after {
+            content: '分';
+            font-size: 0.3em;
+            position: absolute;
+            bottom: 35px;
+        }
+
+        .score-label {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .station-name {
+            font-size: 1.2em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .diagnosis-section, .suggestions-section {
+            margin-bottom: 25px;
+        }
+
+        .diagnosis-section h3, .suggestions-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .diagnosis-list, .suggestions-list {
+            list-style: none;
+        }
+
+        .diagnosis-list li {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .suggestions-list li {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .suggestions-list li::before {
+            content: '💡';
+            position: absolute;
+            left: 12px;
+            top: 12px;
+        }
+
+        .excellent { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .good { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .average { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .poor { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); }
+
+        .comparison-section {
+            margin-top: 20px;
+        }
+
+        .station-comparison {
+            display: grid;
+            gap: 15px;
+        }
+
+        .comparison-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .comparison-score {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .comparison-info h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .comparison-metrics {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .comparison-remove {
+            padding: 8px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .comparison-remove:hover {
+            background: #ee5a6f;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .btn-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ 充电站健康度评估工具</h1>
+            <p>专业的充电站运营状况评估与诊断系统</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 左侧输入区域 -->
+            <div class="card">
+                <h2>📊 场站信息录入</h2>
+                <form id="assessmentForm">
+                    <div class="form-group">
+                        <label>场站名称</label>
+                        <input type="text" id="stationName" required placeholder="例如：CBD中心充电站">
+                    </div>
+                    <div class="form-group">
+                        <label>月充电量（度）</label>
+                        <input type="number" id="monthlyCharge" required placeholder="例如：50000" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>月收入（元）</label>
+                        <input type="number" id="monthlyRevenue" required placeholder="例如：80000" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>月成本（元）</label>
+                        <input type="number" id="monthlyCost" required placeholder="包括租金+电费+运维" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>充电桩数量</label>
+                        <input type="number" id="pileCount" required placeholder="例如：10" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>利用率（%）</label>
+                        <input type="number" id="utilizationRate" required placeholder="例如：35" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="btn-container">
+                        <button type="submit" class="btn btn-primary">开始评估</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">重置</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 右侧结果展示区域 -->
+            <div class="card">
+                <h2>📈 评估结果</h2>
+                <div id="resultSection" class="result-section">
+                    <div class="score-display">
+                        <div id="scoreCircle" class="score-circle">0</div>
+                        <div id="scoreLabel" class="score-label">未评估</div>
+                        <div id="stationNameDisplay" class="station-name"></div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">月利润</div>
+                            <div class="metric-value" id="profitValue">¥0</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">利润率</div>
+                            <div class="metric-value" id="profitRateValue">0%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">月收入</div>
+                            <div class="metric-value" id="revenueValue">¥0</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">利用率</div>
+                            <div class="metric-value" id="utilizationValue">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="diagnosis-section">
+                        <h3>🔍 问题诊断</h3>
+                        <ul id="diagnosisList" class="diagnosis-list"></ul>
+                    </div>
+
+                    <div class="suggestions-section">
+                        <h3>💡 改进建议</h3>
+                        <ul id="suggestionsList" class="suggestions-list"></ul>
+                    </div>
+
+                    <div class="btn-container">
+                        <button class="btn btn-primary" onclick="addToComparison()">添加到对比</button>
+                        <button class="btn btn-secondary" onclick="saveAsImage()">保存为图片</button>
+                        <button class="btn btn-secondary" onclick="saveAsPDF()">导出PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 多场站对比区域 -->
+        <div class="card comparison-section">
+            <h2>🔄 多场站对比</h2>
+            <div id="comparisonList" class="station-comparison"></div>
+        </div>
+    </div>
+
+    <script>
+        // 当前评估数据
+        let currentAssessment = null;
+        // 对比列表
+        let comparisonList = [];
+
+        // 表单提交处理
+        document.getElementById('assessmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            performAssessment();
+        });
+
+        function performAssessment() {
+            // 获取输入数据
+            const data = {
+                stationName: document.getElementById('stationName').value,
+                monthlyCharge: parseFloat(document.getElementById('monthlyCharge').value),
+                monthlyRevenue: parseFloat(document.getElementById('monthlyRevenue').value),
+                monthlyCost: parseFloat(document.getElementById('monthlyCost').value),
+                pileCount: parseInt(document.getElementById('pileCount').value),
+                utilizationRate: parseFloat(document.getElementById('utilizationRate').value)
+            };
+
+            // 计算指标
+            const profit = data.monthlyRevenue - data.monthlyCost;
+            const profitRate = data.monthlyRevenue > 0 ? (profit / data.monthlyRevenue * 100) : 0;
+
+            // 计算健康度评分
+            const score = calculateHealthScore(profitRate, data.utilizationRate, data.monthlyRevenue);
+
+            // 评级
+            const rating = getRating(score, profit);
+
+            // 问题诊断
+            const diagnosis = diagnoseProblem(profitRate, data.utilizationRate, data.monthlyRevenue, profit);
+
+            // 改进建议
+            const suggestions = generateSuggestions(profitRate, data.utilizationRate, data.monthlyRevenue, profit, data);
+
+            // 保存当前评估数据
+            currentAssessment = {
+                ...data,
+                profit,
+                profitRate,
+                score,
+                rating,
+                diagnosis,
+                suggestions
+            };
+
+            // 显示结果
+            displayResults(currentAssessment);
+        }
+
+        function calculateHealthScore(profitRate, utilizationRate, revenue) {
+            // 利润率权重40%（>15%得满分）
+            const profitScore = Math.min(profitRate / 15 * 40, 40);
+
+            // 利用率权重30%（>40%得满分）
+            const utilizationScore = Math.min(utilizationRate / 40 * 30, 30);
+
+            // 收入规模权重30%（>5万/月得满分）
+            const revenueScore = Math.min(revenue / 50000 * 30, 30);
+
+            return Math.round(profitScore + utilizationScore + revenueScore);
+        }
+
+        function getRating(score, profit) {
+            if (profit < 0) return { level: '亏损', class: 'poor' };
+            if (score >= 80) return { level: '优秀', class: 'excellent' };
+            if (score >= 60) return { level: '良好', class: 'good' };
+            if (score >= 40) return { level: '一般', class: 'average' };
+            return { level: '较差', class: 'poor' };
+        }
+
+        function diagnoseProblem(profitRate, utilizationRate, revenue, profit) {
+            const problems = [];
+
+            if (profit < 0) {
+                problems.push('场站处于亏损状态，需要紧急改善');
+            }
+            if (profitRate < 5) {
+                problems.push('利润率过低（<5%），盈利能力不足');
+            } else if (profitRate < 10) {
+                problems.push('利润率偏低（5-10%），有改善空间');
+            }
+
+            if (utilizationRate < 20) {
+                problems.push('利用率严重偏低（<20%），充电桩闲置严重');
+            } else if (utilizationRate < 30) {
+                problems.push('利用率偏低（20-30%），需提升使用效率');
+            }
+
+            if (revenue < 30000) {
+                problems.push('月收入过低（<3万），业务规模不足');
+            } else if (revenue < 50000) {
+                problems.push('月收入偏低（3-5万），有增长潜力');
+            }
+
+            if (problems.length === 0) {
+                problems.push('运营状况良好，继续保持');
+            }
+
+            return problems;
+        }
+
+        function generateSuggestions(profitRate, utilizationRate, revenue, profit, data) {
+            const suggestions = [];
+
+            // 根据利润率给建议
+            if (profitRate < 10) {
+                suggestions.push('优化成本结构：重新评估租金、电费和运维成本，寻找降本空间');
+                suggestions.push('提高充电价格：在合理范围内适当调整服务费，提升单次收益');
+            }
+
+            // 根据利用率给建议
+            if (utilizationRate < 30) {
+                suggestions.push('加强营销推广：通过优惠活动、会员体系吸引更多用户');
+                suggestions.push('优化选址或增加广告：提升场站可见度和便利性');
+                suggestions.push('开展企业合作：与周边企业、物业合作，发展固定客户群');
+            }
+
+            // 根据收入规模给建议
+            if (revenue < 50000) {
+                suggestions.push('扩大服务时段：延长运营时间，特别是高峰时段');
+                suggestions.push('引入增值服务：如车辆清洗、便利店等，增加收入来源');
+            }
+
+            // 通用建议
+            if (data.pileCount > 5 && utilizationRate < 25) {
+                suggestions.push('考虑调整桩数配置：利用率低时可考虑减少桩数降低成本');
+            }
+
+            if (profit > 0 && profitRate > 15 && utilizationRate > 40) {
+                suggestions.push('保持现有运营策略，可考虑复制成功经验到其他场站');
+            }
+
+            // 确保至少有3条建议
+            if (suggestions.length < 3) {
+                suggestions.push('定期维护设备：确保充电桩运行稳定，提升用户体验');
+                suggestions.push('收集用户反馈：了解用户需求，持续优化服务质量');
+            }
+
+            return suggestions.slice(0, 5); // 最多返回5条
+        }
+
+        function displayResults(assessment) {
+            // 显示结果区域
+            document.getElementById('resultSection').classList.add('active');
+
+            // 更新分数圈
+            const scoreCircle = document.getElementById('scoreCircle');
+            scoreCircle.textContent = assessment.score;
+            scoreCircle.className = 'score-circle ' + assessment.rating.class;
+
+            // 更新评级
+            document.getElementById('scoreLabel').textContent = assessment.rating.level;
+            document.getElementById('stationNameDisplay').textContent = assessment.stationName;
+
+            // 更新指标卡片
+            document.getElementById('profitValue').textContent = '¥' + assessment.profit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('profitRateValue').textContent = assessment.profitRate.toFixed(2) + '%';
+            document.getElementById('revenueValue').textContent = '¥' + assessment.monthlyRevenue.toLocaleString('zh-CN');
+            document.getElementById('utilizationValue').textContent = assessment.utilizationRate.toFixed(1) + '%';
+
+            // 更新问题诊断
+            const diagnosisList = document.getElementById('diagnosisList');
+            diagnosisList.innerHTML = '';
+            assessment.diagnosis.forEach(problem => {
+                const li = document.createElement('li');
+                li.textContent = problem;
+                diagnosisList.appendChild(li);
+            });
+
+            // 更新改进建议
+            const suggestionsList = document.getElementById('suggestionsList');
+            suggestionsList.innerHTML = '';
+            assessment.suggestions.forEach(suggestion => {
+                const li = document.createElement('li');
+                li.textContent = suggestion;
+                suggestionsList.appendChild(li);
+            });
+
+            // 滚动到结果区域
+            document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function resetForm() {
+            document.getElementById('assessmentForm').reset();
+            document.getElementById('resultSection').classList.remove('active');
+            currentAssessment = null;
+        }
+
+        function addToComparison() {
+            if (!currentAssessment) {
+                alert('请先完成评估');
+                return;
+            }
+
+            // 检查是否已存在
+            const exists = comparisonList.some(item => item.stationName === currentAssessment.stationName);
+            if (exists) {
+                alert('该场站已在对比列表中');
+                return;
+            }
+
+            comparisonList.push({...currentAssessment});
+            updateComparisonDisplay();
+            alert('已添加到对比列表');
+        }
+
+        function updateComparisonDisplay() {
+            const container = document.getElementById('comparisonList');
+
+            if (comparisonList.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">暂无对比数据，请先完成评估并添加</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            comparisonList.forEach((station, index) => {
+                const card = document.createElement('div');
+                card.className = 'comparison-card';
+                card.innerHTML = `
+                    <div class="comparison-score ${station.rating.class}">
+                        ${station.score}
+                    </div>
+                    <div class="comparison-info">
+                        <h4>${station.stationName} - ${station.rating.level}</h4>
+                        <div class="comparison-metrics">
+                            <span>利润: ¥${station.profit.toLocaleString('zh-CN', {minimumFractionDigits: 0})}</span>
+                            <span>利润率: ${station.profitRate.toFixed(1)}%</span>
+                            <span>利用率: ${station.utilizationRate.toFixed(1)}%</span>
+                            <span>月收入: ¥${station.monthlyRevenue.toLocaleString('zh-CN')}</span>
+                        </div>
+                    </div>
+                    <button class="comparison-remove" onclick="removeFromComparison(${index})">移除</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function removeFromComparison(index) {
+            comparisonList.splice(index, 1);
+            updateComparisonDisplay();
+        }
+
+        async function saveAsImage() {
+            if (!currentAssessment) {
+                alert('请先完成评估');
+                return;
+            }
+
+            try {
+                // 获取要截图的元素
+                const element = document.querySelector('.main-content');
+
+                // 显示加载提示
+                const originalText = event.target.textContent;
+                event.target.textContent = '生成中...';
+                event.target.disabled = true;
+
+                // 使用html2canvas截图
+                const canvas = await html2canvas(element, {
+                    backgroundColor: '#ffffff',
+                    scale: 2, // 提高分辨率
+                    logging: false,
+                    useCORS: true
+                });
+
+                // 转换为图片并下载
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = `充电站评估-${currentAssessment.stationName}-${new Date().toLocaleDateString()}.png`;
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+
+                    // 恢复按钮状态
+                    event.target.textContent = originalText;
+                    event.target.disabled = false;
+                });
+            } catch (error) {
+                console.error('保存图片失败:', error);
+                alert('保存图片失败，请重试');
+                event.target.disabled = false;
+            }
+        }
+
+        async function saveAsPDF() {
+            if (!currentAssessment) {
+                alert('请先完成评估');
+                return;
+            }
+
+            try {
+                // 显示加载提示
+                const originalText = event.target.textContent;
+                event.target.textContent = '生成中...';
+                event.target.disabled = true;
+
+                // 获取要导出的元素
+                const element = document.querySelector('.main-content');
+
+                // 使用html2canvas截图
+                const canvas = await html2canvas(element, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    logging: false,
+                    useCORS: true
+                });
+
+                // 计算PDF尺寸
+                const imgWidth = 210; // A4宽度（mm）
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+
+                // 创建PDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+
+                const imgData = canvas.toDataURL('image/png');
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+                // 如果有对比数据，添加对比页
+                if (comparisonList.length > 0) {
+                    const comparisonElement = document.querySelector('.comparison-section');
+                    const comparisonCanvas = await html2canvas(comparisonElement, {
+                        backgroundColor: '#ffffff',
+                        scale: 2,
+                        logging: false,
+                        useCORS: true
+                    });
+
+                    const compHeight = comparisonCanvas.height * imgWidth / comparisonCanvas.width;
+                    pdf.addPage();
+                    const compImgData = comparisonCanvas.toDataURL('image/png');
+                    pdf.addImage(compImgData, 'PNG', 0, 0, imgWidth, compHeight);
+                }
+
+                // 下载PDF
+                pdf.save(`充电站评估-${currentAssessment.stationName}-${new Date().toLocaleDateString()}.pdf`);
+
+                // 恢复按钮状态
+                event.target.textContent = originalText;
+                event.target.disabled = false;
+            } catch (error) {
+                console.error('导出PDF失败:', error);
+                alert('导出PDF失败，请重试');
+                event.target.disabled = false;
+            }
+        }
+
+        // 初始化对比列表显示
+        updateComparisonDisplay();
+    </script>
+</body>
+</html>

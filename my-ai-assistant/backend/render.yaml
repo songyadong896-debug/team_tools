@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: ai-assistant-backend
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        fromService:
+          name: ai-assistant-backend
+          type: web
+          property: port
+      - key: RELOAD
+        value: False
+      - key: ZHIPUAI_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: DATABASE_URL
+        value: sqlite:///./database/assistant.db
+      - key: CHROMA_PERSIST_DIR
+        value: ./database/chroma
